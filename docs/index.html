@@ -32,108 +32,28 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; overflow: hidden; }
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 13px;
-    overflow: hidden;
-  }
+  .app { display: grid; grid-template-columns: var(--left-w) 1fr var(--right-w); grid-template-rows: 48px 1fr; height: 100vh; }
 
-  /* ── Layout ── */
-  .app {
-    display: grid;
-    grid-template-columns: var(--left-w) 1fr var(--right-w);
-    grid-template-rows: 48px 1fr;
-    height: 100vh;
-  }
-
-  /* ── Top bar ── */
-  .topbar {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-  }
-  .topbar-logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--text);
-  }
+  /* Top bar */
+  .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .topbar-logo { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
   .topbar-logo svg { color: var(--accent); }
   .topbar-sep { flex: 1; }
-  .topbar-meta {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .tag {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase; }
   .tag-ed318 { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
-  .tag-c     { background: #1a3a1a; color: var(--success); border: 1px solid var(--success); }
-  .tag-a     { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .tag-c { background: #1a3a1a; color: var(--success); border: 1px solid var(--success); }
+  .tag-a { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
 
-  /* ── Left panel ── */
-  .left {
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    overflow: hidden;
-  }
+  /* Left panel */
+  .left { border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
+  .panel-hd { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .panel-hd-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; flex: 1; }
+  .count-pill { font-family: var(--mono); font-size: 10px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 1px 8px; }
 
-  .panel-hd {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  .panel-hd-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    flex: 1;
-  }
-  .count-pill {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 1px 8px;
-  }
-
-  /* Upload zone */
-  .upload-zone {
-    margin: 12px;
-    border: 1px dashed var(--border2);
-    border-radius: var(--radius);
-    padding: 20px 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    flex-shrink: 0;
-  }
+  .upload-zone { margin: 12px; border: 1px dashed var(--border2); border-radius: var(--radius); padding: 20px 12px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; flex-shrink: 0; }
   .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
   .upload-zone input { display: none; }
   .upload-icon { color: var(--muted); margin-bottom: 8px; }
@@ -141,222 +61,63 @@
   .upload-label span { color: var(--accent); }
   .upload-filename { margin-top: 6px; font-family: var(--mono); font-size: 10px; color: var(--success); }
 
-  /* Filter */
-  .filter-row {
-    padding: 6px 12px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .filter-btn {
-    flex: 1;
-    font-size: 11px;
-    font-family: var(--sans);
-    font-weight: 500;
-    padding: 4px 0;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.1s;
-  }
+  .filter-row { padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; flex-shrink: 0; }
+  .filter-btn { flex: 1; font-size: 11px; font-family: var(--sans); font-weight: 500; padding: 4px 0; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); color: var(--muted); cursor: pointer; transition: all 0.1s; }
   .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
   .filter-btn:hover:not(.active) { border-color: var(--border2); color: var(--text); }
 
-  /* NOTAM list */
   .notam-list { flex: 1; overflow-y: auto; }
   .notam-list::-webkit-scrollbar { width: 4px; }
-  .notam-list::-webkit-scrollbar-track { background: transparent; }
   .notam-list::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
 
-  .notam-item {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.1s;
-    position: relative;
-  }
+  .notam-item { padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
   .notam-item:hover { background: var(--surface2); }
-  .notam-item.active {
-    background: var(--accent-dim);
-    border-left: 3px solid var(--accent);
-  }
+  .notam-item.active { background: var(--accent-dim); border-left: 3px solid var(--accent); }
   .notam-item.active .notam-id { color: var(--accent); }
   .notam-row1 { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
   .notam-id { font-family: var(--mono); font-size: 12px; font-weight: 500; }
   .notam-name { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
   .notam-dates { font-family: var(--mono); font-size: 10px; color: var(--faint); }
 
-  /* Empty state */
-  .empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 40px 20px;
-    color: var(--muted);
-    font-size: 12px;
-    text-align: center;
-    height: 100%;
-  }
+  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 40px 20px; color: var(--muted); font-size: 12px; text-align: center; height: 100%; }
   .empty svg { color: var(--faint); }
 
-  /* ── Map ── */
-  .map-wrap {
-    position: relative;
-    overflow: hidden;
-  }
-  #map {
-    width: 100%;
-    height: 100%;
-  }
-  .map-empty {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: var(--bg);
-    color: var(--muted);
-    font-size: 13px;
-    text-align: center;
-    z-index: 500;
-  }
+  /* Map */
+  .map-wrap { position: relative; overflow: hidden; }
+  #map { width: 100%; height: 100%; }
+  .map-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--bg); color: var(--muted); font-size: 13px; text-align: center; z-index: 500; pointer-events: none; }
   .map-empty svg { color: var(--faint); }
-  .map-overlay {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 6px 12px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    z-index: 1000;
-    display: none;
-  }
-
-  /* Force dark Leaflet tiles look natural */
+  .map-overlay { position: absolute; top: 12px; left: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; font-family: var(--mono); font-size: 11px; color: var(--muted); z-index: 1000; display: none; }
   .leaflet-container { background: var(--bg) !important; }
 
-  /* ── Right panel ── */
-  .right {
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    overflow: hidden;
-  }
+  /* Right panel */
+  .right { border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
   .right-scroll { flex: 1; overflow-y: auto; padding: 14px; }
   .right-scroll::-webkit-scrollbar { width: 4px; }
   .right-scroll::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
 
   .field-block { margin-bottom: 16px; }
-  .field-lbl {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--faint);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 4px;
-  }
+  .field-lbl { font-size: 10px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
   .field-val { font-size: 13px; color: var(--text); }
   .field-val.mono { font-family: var(--mono); font-size: 11px; color: var(--muted); }
   .field-val.success { color: var(--success); font-weight: 600; }
-  .field-val.accent { color: var(--accent); }
-
   .divider { height: 1px; background: var(--border); margin: 12px 0; }
 
-  /* JSON preview */
-  .json-box {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    line-height: 1.6;
-    max-height: 180px;
-    overflow-y: auto;
-    white-space: pre;
-    word-break: break-all;
-  }
+  .json-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; font-family: var(--mono); font-size: 10px; color: var(--muted); line-height: 1.6; max-height: 180px; overflow-y: auto; white-space: pre; word-break: break-all; }
   .json-box::-webkit-scrollbar { width: 3px; }
   .json-box::-webkit-scrollbar-thumb { background: var(--faint); }
+  .jk { color: #79c0ff; } .js { color: #a5d6ff; } .jn { color: #f2cc60; } .jb { color: #ff7b72; }
 
-  /* JSON syntax highlight */
-  .jk { color: #79c0ff; }
-  .js { color: #a5d6ff; }
-  .jn { color: #f2cc60; }
-  .jb { color: #ff7b72; }
-
-  /* Download footer */
-  .dl-footer {
-    padding: 12px 14px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .dl-btn {
-    width: 100%;
-    padding: 10px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius);
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background 0.15s, transform 0.1s;
-  }
+  .dl-footer { padding: 12px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .dl-btn { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s, transform 0.1s; }
   .dl-btn:hover { background: #58a6ff; }
   .dl-btn:active { transform: scale(0.98); }
-  .dl-btn:disabled {
-    background: var(--surface2);
-    color: var(--faint);
-    border: 1px solid var(--border);
-    cursor: not-allowed;
-    transform: none;
-  }
+  .dl-btn:disabled { background: var(--surface2); color: var(--faint); border: 1px solid var(--border); cursor: not-allowed; transform: none; }
 
-  /* Spinner */
   @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: none;
-  }
+  .spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    padding: 10px 16px;
-    border-radius: var(--radius);
-    font-size: 12px;
-    font-weight: 500;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.2s;
-    z-index: 9999;
-    pointer-events: none;
-  }
+  .toast { position: fixed; bottom: 24px; right: 24px; padding: 10px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all 0.2s; z-index: 9999; pointer-events: none; }
   .toast.show { opacity: 1; transform: none; }
   .toast.ok  { background: #1a3a1a; color: var(--success); border: 1px solid var(--success); }
   .toast.err { background: #3a1a1a; color: var(--danger);  border: 1px solid var(--danger); }
@@ -430,7 +191,6 @@
     <div class="panel-hd">
       <span class="panel-hd-title">GeoJSON Output</span>
     </div>
-
     <div class="right-scroll" id="right-panel">
       <div class="empty">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -439,7 +199,6 @@
         Select a NOTAM to preview<br>its ED-318 GeoJSON
       </div>
     </div>
-
     <div class="dl-footer">
       <button class="dl-btn" id="dl-btn" disabled>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -454,73 +213,353 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- SheetJS for Excel parsing in the browser -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-const state = {
-  notams:    [],
-  filtered:  [],
-  selected:  null,
-  geojson:   null,
-  filter:    'all',
-  map:       null,
-  mapLayer:  null,
+// ═══════════════════════════════════════════════════════════════════════════
+// CONVERTER — all Python logic ported to JavaScript
+// Mirrors converter.py exactly so output is identical
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Coordinate parsing ────────────────────────────────────────────────────
+
+function dmsToDD(str) {
+  str = str.trim();
+  if (!str) return null;
+  const hemi = str.slice(-1).toUpperCase();
+  const num  = str.slice(0, -1);
+  const dot  = num.indexOf('.');
+  let intDigits = dot >= 0 ? num.slice(0, dot) : num;
+  const decPart = dot >= 0 ? num.slice(dot + 1) : '0';
+  const expectedLen = (hemi === 'N' || hemi === 'S') ? 6 : 7;
+  intDigits = intDigits.padStart(expectedLen, '0');
+  if (intDigits.length < expectedLen) return null;
+  let deg, mins, secs;
+  try {
+    if (hemi === 'N' || hemi === 'S') {
+      deg  = parseInt(intDigits.slice(0, 2));
+      mins = parseInt(intDigits.slice(2, 4));
+      secs = parseFloat(intDigits.slice(4, 6) + '.' + decPart);
+    } else {
+      deg  = parseInt(intDigits.slice(0, 3));
+      mins = parseInt(intDigits.slice(3, 5));
+      secs = parseFloat(intDigits.slice(5, 7) + '.' + decPart);
+    }
+  } catch(e) { return null; }
+  let dd = deg + mins / 60.0 + secs / 3600.0;
+  if (hemi === 'S' || hemi === 'W') dd = -dd;
+  return Math.round(dd * 1e8) / 1e8;
+}
+
+function extractCoordinates(eField) {
+  const pat = /(\d{6}(?:\.\d+)?[NS])\s*(\d{6,7}(?:\.\d+)?[EW])/gi;
+  const coords = [];
+  let m;
+  while ((m = pat.exec(eField)) !== null) {
+    const lat = dmsToDD(m[1]);
+    const lon = dmsToDD(m[2]);
+    if (lat !== null && lon !== null) coords.push([lon, lat]);
+  }
+  return coords;
+}
+
+function qLineCenter(qLine) {
+  const m = qLine.trim().match(/(\d{4}[NS])(\d{5}[EW])(\d{3})\s*$/);
+  if (!m) return null;
+  let lat = parseInt(m[1].slice(0,2)) + parseInt(m[1].slice(2,4)) / 60.0;
+  if (m[1][4] === 'S') lat = -lat;
+  let lon = parseInt(m[2].slice(0,3)) + parseInt(m[2].slice(3,5)) / 60.0;
+  if (m[2][5] === 'W') lon = -lon;
+  return { lat: Math.round(lat*1e6)/1e6, lon: Math.round(lon*1e6)/1e6, r: parseInt(m[3]) };
+}
+
+function circleToPolygon(lat, lon, radiusNm, n = 64) {
+  const rm   = radiusNm * 1852;
+  const R    = 6371000;
+  const latR = lat * Math.PI / 180;
+  const lonR = lon * Math.PI / 180;
+  const dR   = rm / R;
+  const ring = [];
+  for (let i = 0; i <= n; i++) {
+    const b    = (i * 360 / n) * Math.PI / 180;
+    const pLat = Math.asin(Math.sin(latR)*Math.cos(dR) + Math.cos(latR)*Math.sin(dR)*Math.cos(b));
+    const pLon = lonR + Math.atan2(Math.sin(b)*Math.sin(dR)*Math.cos(latR), Math.cos(dR)-Math.sin(latR)*Math.sin(pLat));
+    ring.push([Math.round(pLon*180/Math.PI*1e6)/1e6, Math.round(pLat*180/Math.PI*1e6)/1e6]);
+  }
+  return [ring];
+}
+
+function buildGeometry(coords, qLine) {
+  const c = qLineCenter(qLine);
+  if (coords.length >= 3) {
+    const ring = [...coords];
+    if (JSON.stringify(ring[0]) !== JSON.stringify(ring[ring.length-1])) ring.push(ring[0]);
+    return { type: 'Polygon', coordinates: [ring] };
+  }
+  if (coords.length === 1) {
+    if (c && c.r > 0) return { type: 'Polygon', coordinates: circleToPolygon(coords[0][1], coords[0][0], c.r) };
+    return { type: 'Point', coordinates: coords[0] };
+  }
+  if (c) {
+    if (c.r > 0) return { type: 'Polygon', coordinates: circleToPolygon(c.lat, c.lon, c.r) };
+    return { type: 'Point', coordinates: [c.lon, c.lat] };
+  }
+  return null;
+}
+
+// ── Altitude parsing ───────────────────────────────────────────────────────
+
+function parseAltitude(s) {
+  s = (s || '').trim().toUpperCase();
+  if (!s || s === 'SFC' || s === 'GND' || s === 'MSL') return { val: 0, ref: 'AGL' };
+  let m = s.match(/FL\s*(\d+)/);
+  if (m) return { val: parseInt(m[1]) * 30, ref: 'STD' };
+  m = s.match(/(\d+(?:\.\d+)?)\s*FT\s*(AGL|AMSL|MSL)?/);
+  if (m) return { val: Math.round(parseFloat(m[1]) * 0.3048), ref: (m[2] || 'AGL').replace('MSL','AMSL') };
+  m = s.match(/(\d+(?:\.\d+)?)\s*M\b/);
+  if (m) return { val: Math.round(parseFloat(m[1])), ref: 'AGL' };
+  return { val: 0, ref: 'AGL' };
+}
+
+// ── Date / time parsing ────────────────────────────────────────────────────
+
+function parseNotamDatetime(s) {
+  s = String(s || '').trim();
+  if (s.length !== 10) return null;
+  try {
+    const y=2000+parseInt(s.slice(0,2)), mo=s.slice(2,4), d=s.slice(4,6), h=s.slice(6,8), mi=s.slice(8,10);
+    return `${y}-${mo}-${d}T${h}:${mi}:00Z`;
+  } catch(e) { return null; }
+}
+
+function parseExcelDate(s) {
+  s = String(s || '').trim();
+  // MM/DD/YYYY HHMM
+  let m = s.match(/(\d{2})\/(\d{2})\/(\d{4})\s*(\d{4})?/);
+  if (m) return `${m[3]}-${m[1]}-${m[2]}T${m[4] ? m[4].slice(0,2)+':'+m[4].slice(2) : '00:00'}:00Z`;
+  return s;
+}
+
+// ── Field extraction helpers ───────────────────────────────────────────────
+
+const QCODE_MAP = {
+  'QWULW': ['COMMON','REQ_AUTHORISATION'],
+  'QRDCA': ['PROHIBITED','PROHIBITED'],
+  'QRRCA': ['RESTRICTED','REQ_AUTHORISATION'],
+  'QDUCA': ['DANGER','CONDITIONAL'],
+  'QRTCA': ['RESTRICTED','REQ_AUTHORISATION'],
+  'QWLAW': ['COMMON','CONDITIONAL'],
 };
 
-// ── Map init ───────────────────────────────────────────────────────────────
-function initMap() {
-  state.map = L.map('map', {
-    center: [4.5, 109],
-    zoom: 5,
-    zoomControl: true,
-    attributionControl: true,
-  });
+const ICAO_COUNTRY = { 'WM':'MYS','WS':'SGP','VH':'AUS','EG':'GBR','ED':'DEU','LF':'FRA','EH':'NLD','KZ':'USA','K':'USA','CY':'CAN','RJ':'JPN' };
 
+function getField(text, letter) {
+  const re = new RegExp(`${letter}\\)\\s*(.*?)(?=\\n[A-Z]\\)|$)`, 's');
+  const m  = text.match(re);
+  return m ? m[1].trim() : '';
+}
+
+function getQLine(text) {
+  const m = text.match(/Q\)\s*(.+)/);
+  return m ? m[0].trim() : '';
+}
+
+function qcodeInfo(qLine) {
+  const m = qLine.match(/\/([A-Z]{5})\//);
+  if (m) {
+    if (QCODE_MAP[m[1]]) return QCODE_MAP[m[1]];
+    if (m[1].startsWith('QR')) return ['RESTRICTED','REQ_AUTHORISATION'];
+    if (m[1].startsWith('QD')) return ['DANGER','CONDITIONAL'];
+    if (m[1].startsWith('QP')) return ['PROHIBITED','PROHIBITED'];
+  }
+  return ['COMMON','REQ_AUTHORISATION'];
+}
+
+function getCountry(loc) {
+  for (const [prefix, cc] of Object.entries(ICAO_COUNTRY)) {
+    if (loc.startsWith(prefix)) return cc;
+  }
+  return 'MYS';
+}
+
+function buildSchedule(dField, bDt, cDt) {
+  if (!dField) return (bDt && cDt) ? [{ startDateTime: bDt, endDateTime: cDt }] : [];
+  const daily = dField.trim().match(/^(?:DLY\s+)?(\d{4})-(\d{4})$/);
+  if (daily) {
+    const st = daily[1], et = daily[2];
+    return [{ startDateTime: bDt, endDateTime: cDt,
+      schedule: [{ day: ['MON','TUE','WED','THU','FRI','SAT','SUN'],
+        startTime: `${st.slice(0,2)}:${st.slice(2)}`, endTime: `${et.slice(0,2)}:${et.slice(2)}` }] }];
+  }
+  return [{ startDateTime: bDt, endDateTime: cDt, rawSchedule: dField }];
+}
+
+// ── Core conversion ────────────────────────────────────────────────────────
+
+function notamToED318Feature(row) {
+  const full = String(row.full_text || '');
+  const num  = String(row.notam_num || '').trim();
+  const loc  = String(row.location  || '').trim();
+
+  const qLine  = getQLine(full);
+  const eField = getField(full, 'E');
+  const fText  = getField(full, 'F') || 'SFC';
+  const gRaw   = getField(full, 'G');
+  const gText  = gRaw.replace(/\s*F\).*$/s, '').trim();
+  const dField = getField(full, 'D') || null;
+
+  const bm = full.match(/B\)\s*(\d{10})/);
+  const cm = full.match(/C\)\s*(\d{10})/);
+  const bDt = bm ? parseNotamDatetime(bm[1]) : parseExcelDate(row.effective_date);
+  const cDt = cm ? parseNotamDatetime(cm[1]) : parseExcelDate(row.expiration_date);
+
+  const [zoneType, restriction] = qcodeInfo(qLine);
+  const nameM = eField.match(/\(([^)]+)\)/);
+  const name  = nameM ? nameM[1].trim() : num;
+
+  const lower  = parseAltitude(fText);
+  const upper  = parseAltitude(gText);
+  const coords = extractCoordinates(eField);
+  const geom   = buildGeometry(coords, qLine);
+  const applicability = buildSchedule(dField, bDt, cDt);
+  const country = getCountry(loc);
+
+  return {
+    type: 'Feature',
+    geometry: geom,
+    properties: {
+      identifier: num,
+      country,
+      name,
+      type: zoneType,
+      restriction,
+      restrictionConditions: '',
+      reason: ['AIR_TRAFFIC'],
+      otherReasonInfo: '',
+      regulationExemption: (eField.includes('SUBJ ATC') || eField.includes('SUBJ TO ATC')) ? 'YES' : '',
+      uSpaceClass: '',
+      message: eField,
+      applicability,
+      zoneAuthority: [{ name: loc, service: 'INFORMATION', email: '', contactName: '', siteURL: '', phone: '', purpose: 'INFORMATION', intervalBefore: 'PT24H' }],
+      geometry: geom ? [{ uomDimensions: 'M', lowerLimit: lower.val, lowerVerticalReference: lower.ref, upperLimit: upper.val, upperVerticalReference: upper.ref, horizontalProjection: geom }] : [],
+      _source: { notamNumber: num, fir: loc, issueDate: parseExcelDate(row.issue_date), effectiveDate: bDt, expirationDate: cDt, classification: row.classification, rawQLine: qLine }
+    }
+  };
+}
+
+function buildGeoJSON(row) {
+  return {
+    type: 'FeatureCollection',
+    features: [notamToED318Feature(row)],
+    _metadata: { standard: 'ED-318', generatedAt: new Date().toISOString(), notamNumber: row.notam_num }
+  };
+}
+
+// ── Excel parsing ──────────────────────────────────────────────────────────
+
+function parseExcel(arrayBuffer, filename) {
+  const wb   = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+  const ws   = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+  // Find header row — look for 'location' in first column
+  let headerIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][0]).trim().toLowerCase() === 'location') { headerIdx = i; break; }
+  }
+  if (headerIdx < 0) throw new Error("Could not find header row. Make sure this is a valid FNS NOTAM export.");
+
+  const data = rows.slice(headerIdx + 1).filter(r => r[1] && String(r[1]).trim());
+  return data.map(r => ({
+    location:        String(r[0] || '').trim(),
+    notam_num:       String(r[1] || '').trim(),
+    classification:  String(r[2] || '').trim(),
+    issue_date:      String(r[3] || '').trim(),
+    effective_date:  String(r[4] || '').trim(),
+    expiration_date: String(r[5] || '').trim(),
+    full_text:       String(r[6] || '').trim(),
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APP STATE & UI
+// ═══════════════════════════════════════════════════════════════════════════
+
+const state = { notams: [], filtered: [], selected: null, geojson: null, filter: 'all', map: null, mapLayer: null };
+
+// ── Map ────────────────────────────────────────────────────────────────────
+function initMap() {
+  state.map = L.map('map', { center: [4.5, 109], zoom: 5 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
   }).addTo(state.map);
 }
 
+function clearMap() {
+  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
+  document.getElementById('map-empty').style.display   = 'flex';
+  document.getElementById('map-overlay').style.display = 'none';
+}
+
+function renderMap(gj) {
+  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
+  const feat = gj.features[0];
+  if (!feat || !feat.geometry) { clearMap(); return; }
+
+  document.getElementById('map-empty').style.display = 'none';
+
+  state.mapLayer = L.geoJSON(feat, {
+    style: { color: '#388bfd', weight: 2.5, opacity: 1, fillColor: '#388bfd', fillOpacity: 0.18 },
+    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 8, color: '#388bfd', weight: 2, fillColor: '#388bfd', fillOpacity: 0.5 }),
+  }).addTo(state.map);
+
+  const bounds = state.mapLayer.getBounds();
+  if (bounds.isValid()) state.map.fitBounds(bounds, { padding: [40, 40] });
+
+  const geomType = feat.geometry.type;
+  const pts = geomType === 'Polygon' ? feat.geometry.coordinates[0].length : 1;
+  const ov  = document.getElementById('map-overlay');
+  ov.style.display = 'block';
+  ov.textContent   = `${state.selected.notam_num}  ·  ${geomType}  ·  ${pts} pts`;
+}
+
 // ── Upload ─────────────────────────────────────────────────────────────────
-const fileInput    = document.getElementById('file-input');
-const uploadZone   = document.getElementById('upload-zone');
-const uploadName   = document.getElementById('upload-filename');
+const fileInput  = document.getElementById('file-input');
+const uploadZone = document.getElementById('upload-zone');
 
 uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
 uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
 uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('drag');
-  const f = e.dataTransfer.files[0];
-  if (f) uploadFile(f);
+  e.preventDefault(); uploadZone.classList.remove('drag');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
-fileInput.addEventListener('change', () => {
-  if (fileInput.files[0]) uploadFile(fileInput.files[0]);
-});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
 
-async function uploadFile(file) {
-  uploadName.textContent = '⏳ Parsing…';
-  const fd = new FormData();
-  fd.append('file', file);
-  try {
-    const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
-    state.notams   = data.notams;
-    state.selected = null;
-    state.geojson  = null;
-    uploadName.textContent = file.name;
-    document.getElementById('hdr-meta').textContent =
-      `${data.total} NOTAM${data.total !== 1 ? 's' : ''} · ${file.name}`;
-    applyFilter();
-    clearRight();
-    clearMap();
-    toast(`Loaded ${data.total} NOTAMs`, 'ok');
-  } catch (err) {
-    uploadName.textContent = '';
-    toast(err.message, 'err');
-  }
+function handleFile(file) {
+  const fname = document.getElementById('upload-filename');
+  fname.textContent = '⏳ Parsing…';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const notams = parseExcel(ev.target.result, file.name);
+      state.notams   = notams;
+      state.selected = null;
+      state.geojson  = null;
+      fname.textContent = file.name;
+      document.getElementById('hdr-meta').textContent = `${notams.length} NOTAM${notams.length !== 1 ? 's' : ''} · ${file.name}`;
+      applyFilter();
+      clearRight();
+      clearMap();
+      toast(`Loaded ${notams.length} NOTAMs`, 'ok');
+    } catch(err) {
+      fname.textContent = '';
+      toast(err.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // ── Filter ─────────────────────────────────────────────────────────────────
@@ -540,120 +579,54 @@ function applyFilter() {
   renderList();
 }
 
-// ── Render list ────────────────────────────────────────────────────────────
+// ── List ───────────────────────────────────────────────────────────────────
 function renderList() {
   const el = document.getElementById('notam-list');
-  if (state.filtered.length === 0) {
+  if (!state.filtered.length) {
     el.innerHTML = `<div class="empty">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
       ${state.notams.length === 0 ? 'Upload a file to load NOTAMs' : 'No NOTAMs match this filter'}
     </div>`;
     return;
   }
-
   el.innerHTML = state.filtered.map(n => {
-    const active  = state.selected && state.selected.notam_num === n.notam_num ? 'active' : '';
-    const isC     = n.notam_num.startsWith('C');
-    const nameM   = n.full_text.match(/\(([^)]+)\)/);
-    const name    = nameM ? nameM[1] : '—';
-    const expM    = n.expiration_date.match(/\d{2}\/\d{2}\/\d{4}/);
-    const exp     = expM ? expM[0] : n.expiration_date.slice(0, 10);
-    return `
-      <div class="notam-item ${active}" data-id="${n.notam_num}">
-        <div class="notam-row1">
-          <span class="notam-id">${n.notam_num}</span>
-          <span class="tag ${isC ? 'tag-c' : 'tag-a'}">${isC ? 'C' : 'A'}</span>
-        </div>
-        <div class="notam-name">${name}</div>
-        <div class="notam-dates">Exp: ${exp}</div>
-      </div>`;
+    const active = state.selected && state.selected.notam_num === n.notam_num ? 'active' : '';
+    const isC    = n.notam_num.startsWith('C');
+    const nameM  = n.full_text.match(/\(([^)]+)\)/);
+    const name   = nameM ? nameM[1] : '—';
+    const expM   = n.expiration_date.match(/\d{2}\/\d{2}\/\d{4}/);
+    const exp    = expM ? expM[0] : n.expiration_date.slice(0, 10);
+    return `<div class="notam-item ${active}" data-id="${n.notam_num}">
+      <div class="notam-row1">
+        <span class="notam-id">${n.notam_num}</span>
+        <span class="tag ${isC ? 'tag-c' : 'tag-a'}">${isC ? 'C' : 'A'}</span>
+      </div>
+      <div class="notam-name">${name}</div>
+      <div class="notam-dates">Exp: ${exp}</div>
+    </div>`;
   }).join('');
-
-  el.querySelectorAll('.notam-item').forEach(item => {
-    item.addEventListener('click', () => selectNotam(item.dataset.id));
-  });
+  el.querySelectorAll('.notam-item').forEach(item => item.addEventListener('click', () => selectNotam(item.dataset.id)));
 }
 
-// ── Select NOTAM ───────────────────────────────────────────────────────────
-async function selectNotam(id) {
+// ── Select ─────────────────────────────────────────────────────────────────
+function selectNotam(id) {
   state.selected = state.notams.find(n => n.notam_num === id);
   if (!state.selected) return;
-
-  renderList();
-  renderRightLoading();
-
   try {
-    const res  = await fetch(`/api/preview/${encodeURIComponent(id)}`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(state.selected),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Conversion failed');
-    state.geojson = data;
-    renderMap(data);
-    renderRight(data);
-  } catch (err) {
-    toast(err.message, 'err');
-    clearRight();
-    clearMap();
+    state.geojson = buildGeoJSON(state.selected);
+    renderList();
+    renderMap(state.geojson);
+    renderRight(state.geojson);
+  } catch(err) {
+    toast('Conversion error: ' + err.message, 'err');
   }
-}
-
-// ── Map rendering ──────────────────────────────────────────────────────────
-function clearMap() {
-  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
-  document.getElementById('map-empty').style.display   = 'flex';
-  document.getElementById('map-overlay').style.display = 'none';
-}
-
-function renderMap(gj) {
-  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
-
-  const feat = gj.features[0];
-  if (!feat || !feat.geometry) { clearMap(); return; }
-
-  document.getElementById('map-empty').style.display = 'none';
-
-  state.mapLayer = L.geoJSON(feat, {
-    style: {
-      color:       '#388bfd',
-      weight:      2.5,
-      opacity:     1,
-      fillColor:   '#388bfd',
-      fillOpacity: 0.18,
-    },
-    pointToLayer: (feature, latlng) =>
-      L.circleMarker(latlng, { radius: 8, color: '#388bfd', weight: 2, fillColor: '#388bfd', fillOpacity: 0.5 }),
-  }).addTo(state.map);
-
-  const bounds = state.mapLayer.getBounds();
-  if (bounds.isValid()) state.map.fitBounds(bounds, { padding: [40, 40] });
-
-  const geomType = feat.geometry.type;
-  const pts = geomType === 'Polygon' ? feat.geometry.coordinates[0].length : 1;
-  const overlay = document.getElementById('map-overlay');
-  overlay.style.display = 'block';
-  overlay.textContent   = `${state.selected.notam_num}  ·  ${geomType}  ·  ${pts} pts`;
 }
 
 // ── Right panel ────────────────────────────────────────────────────────────
 function clearRight() {
   document.getElementById('right-panel').innerHTML = `<div class="empty">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
-    </svg>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
     Select a NOTAM to preview<br>its ED-318 GeoJSON
-  </div>`;
-  document.getElementById('dl-btn').disabled = true;
-}
-
-function renderRightLoading() {
-  document.getElementById('right-panel').innerHTML = `<div class="empty">
-    <div class="spinner" style="display:block; width:24px; height:24px;"></div>
-    Converting…
   </div>`;
   document.getElementById('dl-btn').disabled = true;
 }
@@ -666,130 +639,51 @@ function renderRight(gj) {
   const safe = state.selected.notam_num.replace('/', '_');
   const isC  = state.selected.notam_num.startsWith('C');
 
-  const snippet = buildSnippet(gj);
+  const slim = { type:'FeatureCollection', features:[{ type:'Feature', geometry: geom,
+    properties:{ identifier:p.identifier, name:p.name, type:p.type, restriction:p.restriction, country:p.country }}]};
+  const snippet = syntaxHL(JSON.stringify(slim, null, 2).slice(0, 900) + '\n…');
 
   document.getElementById('right-panel').innerHTML = `
-    <div class="field-block">
-      <div class="field-lbl">File name</div>
-      <div class="field-val mono">${safe}.geojson</div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Format</div>
-      <div class="field-val success">ED-318 GeoJSON ✓</div>
-    </div>
+    <div class="field-block"><div class="field-lbl">File name</div><div class="field-val mono">${safe}.geojson</div></div>
+    <div class="field-block"><div class="field-lbl">Format</div><div class="field-val success">ED-318 GeoJSON ✓</div></div>
     <div class="divider"></div>
-    <div class="field-block">
-      <div class="field-lbl">Identifier</div>
-      <div class="field-val" style="display:flex;align-items:center;gap:6px">
-        ${p.identifier}
-        <span class="tag ${isC ? 'tag-c' : 'tag-a'}">${isC ? 'C-class' : 'A-class'}</span>
-      </div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Name</div>
-      <div class="field-val">${p.name}</div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Zone type</div>
-      <div class="field-val">${p.type} <span style="color:var(--muted)">·</span> ${p.restriction}</div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Country</div>
-      <div class="field-val mono">${p.country}</div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Geometry</div>
-      <div class="field-val">${geom ? geom.type : 'None'}
-        <span style="color:var(--muted)">·</span>
-        <span class="mono">${geom && geom.type === 'Polygon' ? (geom.coordinates[0].length + ' pts') : '—'}</span>
-      </div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Altitude</div>
-      <div class="field-val mono">${g.lowerLimit ?? 0}m ${g.lowerVerticalReference ?? 'AGL'} → ${g.upperLimit ?? 0}m ${g.upperVerticalReference ?? 'AGL'}</div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Valid from</div>
-      <div class="field-val mono" style="font-size:10px">${app.startDateTime || '—'}</div>
-    </div>
-    <div class="field-block">
-      <div class="field-lbl">Valid to</div>
-      <div class="field-val mono" style="font-size:10px">${app.endDateTime || '—'}</div>
-    </div>
+    <div class="field-block"><div class="field-lbl">Identifier</div>
+      <div class="field-val" style="display:flex;align-items:center;gap:6px">${p.identifier}<span class="tag ${isC?'tag-c':'tag-a'}">${isC?'C-class':'A-class'}</span></div></div>
+    <div class="field-block"><div class="field-lbl">Name</div><div class="field-val">${p.name}</div></div>
+    <div class="field-block"><div class="field-lbl">Zone type</div><div class="field-val">${p.type} <span style="color:var(--muted)">·</span> ${p.restriction}</div></div>
+    <div class="field-block"><div class="field-lbl">Country</div><div class="field-val mono">${p.country}</div></div>
+    <div class="field-block"><div class="field-lbl">Geometry</div>
+      <div class="field-val">${geom ? geom.type : 'None'} <span style="color:var(--muted)">·</span> <span class="mono">${geom && geom.type==='Polygon' ? geom.coordinates[0].length+' pts' : '—'}</span></div></div>
+    <div class="field-block"><div class="field-lbl">Altitude</div><div class="field-val mono">${g.lowerLimit??0}m ${g.lowerVerticalReference??'AGL'} → ${g.upperLimit??0}m ${g.upperVerticalReference??'AGL'}</div></div>
+    <div class="field-block"><div class="field-lbl">Valid from</div><div class="field-val mono" style="font-size:10px">${app.startDateTime||'—'}</div></div>
+    <div class="field-block"><div class="field-lbl">Valid to</div><div class="field-val mono" style="font-size:10px">${app.endDateTime||'—'}</div></div>
     <div class="divider"></div>
-    <div class="field-block">
-      <div class="field-lbl">Preview</div>
-      <div class="json-box">${snippet}</div>
-    </div>`;
+    <div class="field-block"><div class="field-lbl">Preview</div><div class="json-box">${snippet}</div></div>`;
 
   const btn = document.getElementById('dl-btn');
   btn.disabled = false;
-  btn.onclick  = () => downloadNotam();
-}
-
-function buildSnippet(gj) {
-  const slim = {
-    type: 'FeatureCollection',
-    features: [{
-      type: 'Feature',
-      geometry: gj.features[0].geometry,
-      properties: {
-        identifier:  gj.features[0].properties.identifier,
-        name:        gj.features[0].properties.name,
-        type:        gj.features[0].properties.type,
-        restriction: gj.features[0].properties.restriction,
-        country:     gj.features[0].properties.country,
-      }
-    }]
-  };
-  return syntaxHL(JSON.stringify(slim, null, 2).slice(0, 800) + '\n…');
+  btn.onclick  = downloadNotam;
 }
 
 function syntaxHL(json) {
-  return json
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+  return json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
       if (/^"/.test(m)) return /:$/.test(m) ? `<span class="jk">${m}</span>` : `<span class="js">${m}</span>`;
-      if (/true|false/.test(m)) return `<span class="jb">${m}</span>`;
-      if (/null/.test(m))       return `<span class="jb">${m}</span>`;
+      if (/true|false|null/.test(m)) return `<span class="jb">${m}</span>`;
       return `<span class="jn">${m}</span>`;
     });
 }
 
 // ── Download ───────────────────────────────────────────────────────────────
-async function downloadNotam() {
+function downloadNotam() {
   if (!state.selected || !state.geojson) return;
-
-  const btn     = document.getElementById('dl-btn');
-  const label   = document.getElementById('dl-label');
-  const spinner = document.getElementById('dl-spinner');
-
-  btn.disabled      = true;
-  label.textContent = 'Downloading…';
-  spinner.style.display = 'block';
-
-  try {
-    const res = await fetch('/api/download', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(state.selected),
-    });
-    if (!res.ok) throw new Error('Download failed');
-
-    const blob = await res.blob();
-    const safe = state.selected.notam_num.replace('/', '_');
-    const url  = URL.createObjectURL(blob);
-    const a    = Object.assign(document.createElement('a'), { href: url, download: `${safe}.geojson` });
-    a.click();
-    URL.revokeObjectURL(url);
-    toast(`Downloaded ${safe}.geojson`, 'ok');
-  } catch (err) {
-    toast(err.message, 'err');
-  } finally {
-    btn.disabled          = false;
-    label.textContent     = 'Download GeoJSON';
-    spinner.style.display = 'none';
-  }
+  const safe = state.selected.notam_num.replace('/', '_');
+  const blob = new Blob([JSON.stringify(state.geojson, null, 2)], { type: 'application/geo+json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: `${safe}.geojson` });
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`Downloaded ${safe}.geojson`, 'ok');
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────
@@ -799,7 +693,7 @@ function toast(msg, type = 'ok') {
   el.textContent = msg;
   el.className   = `toast ${type} show`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
