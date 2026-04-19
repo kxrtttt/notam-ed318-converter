@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOTAM → ED-318 Converter</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --surface2:  #21262d;
+    --border:    #30363d;
+    --border2:   #484f58;
+    --accent:    #388bfd;
+    --accent-dim:#1f3a5c;
+    --success:   #3fb950;
+    --danger:    #f85149;
+    --warn:      #d29922;
+    --text:      #e6edf3;
+    --muted:     #7d8590;
+    --faint:     #444c56;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Syne', sans-serif;
+    --radius:    6px;
+    --left-w:    280px;
+    --right-w:   300px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    overflow: hidden;
+  }
+
+  /* ── Layout ── */
+  .app {
+    display: grid;
+    grid-template-columns: var(--left-w) 1fr var(--right-w);
+    grid-template-rows: 48px 1fr;
+    height: 100vh;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .topbar-logo svg { color: var(--accent); }
+  .topbar-sep { flex: 1; }
+  .topbar-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tag-ed318 { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
+  .tag-c     { background: #1a3a1a; color: var(--success); border: 1px solid var(--success); }
+  .tag-a     { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+  /* ── Left panel ── */
+  .left {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .panel-hd {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .panel-hd-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex: 1;
+  }
+  .count-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1px 8px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    margin: 12px;
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 20px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
+  .upload-zone input { display: none; }
+  .upload-icon { color: var(--muted); margin-bottom: 8px; }
+  .upload-label { color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .upload-label span { color: var(--accent); }
+  .upload-filename { margin-top: 6px; font-family: var(--mono); font-size: 10px; color: var(--success); }
+
+  /* Filter */
+  .filter-row {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .filter-btn {
+    flex: 1;
+    font-size: 11px;
+    font-family: var(--sans);
+    font-weight: 500;
+    padding: 4px 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .filter-btn:hover:not(.active) { border-color: var(--border2); color: var(--text); }
+
+  /* NOTAM list */
+  .notam-list { flex: 1; overflow-y: auto; }
+  .notam-list::-webkit-scrollbar { width: 4px; }
+  .notam-list::-webkit-scrollbar-track { background: transparent; }
+  .notam-list::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+
+  .notam-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+  .notam-item:hover { background: var(--surface2); }
+  .notam-item.active {
+    background: var(--accent-dim);
+    border-left: 3px solid var(--accent);
+  }
+  .notam-item.active .notam-id { color: var(--accent); }
+  .notam-row1 { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .notam-id { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .notam-name { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+  .notam-dates { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+
+  /* Empty state */
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+    height: 100%;
+  }
+  .empty svg { color: var(--faint); }
+
+  /* ── Map ── */
+  .map-wrap {
+    position: relative;
+    overflow: hidden;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+  .map-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    z-index: 500;
+  }
+  .map-empty svg { color: var(--faint); }
+  .map-overlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    z-index: 1000;
+    display: none;
+  }
+
+  /* Force dark Leaflet tiles look natural */
+  .leaflet-container { background: var(--bg) !important; }
+
+  /* ── Right panel ── */
+  .right {
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .right-scroll { flex: 1; overflow-y: auto; padding: 14px; }
+  .right-scroll::-webkit-scrollbar { width: 4px; }
+  .right-scroll::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+
+  .field-block { margin-bottom: 16px; }
+  .field-lbl {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .field-val { font-size: 13px; color: var(--text); }
+  .field-val.mono { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .field-val.success { color: var(--success); font-weight: 600; }
+  .field-val.accent { color: var(--accent); }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* JSON preview */
+  .json-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-height: 180px;
+    overflow-y: auto;
+    white-space: pre;
+    word-break: break-all;
+  }
+  .json-box::-webkit-scrollbar { width: 3px; }
+  .json-box::-webkit-scrollbar-thumb { background: var(--faint); }
+
+  /* JSON syntax highlight */
+  .jk { color: #79c0ff; }
+  .js { color: #a5d6ff; }
+  .jn { color: #f2cc60; }
+  .jb { color: #ff7b72; }
+
+  /* Download footer */
+  .dl-footer {
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .dl-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .dl-btn:hover { background: #58a6ff; }
+  .dl-btn:active { transform: scale(0.98); }
+  .dl-btn:disabled {
+    background: var(--surface2);
+    color: var(--faint);
+    border: 1px solid var(--border);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: none; }
+  .toast.ok  { background: #1a3a1a; color: var(--success); border: 1px solid var(--success); }
+  .toast.err { background: #3a1a1a; color: var(--danger);  border: 1px solid var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      NOTAM → ED-318
+    </div>
+    <span class="tag tag-ed318">EUROCAE ED-318</span>
+    <div class="topbar-sep"></div>
+    <span class="topbar-meta" id="hdr-meta">No file loaded</span>
+  </header>
+
+  <!-- Left: NOTAM list -->
+  <aside class="left">
+    <div class="panel-hd">
+      <span class="panel-hd-title">NOTAMs</span>
+      <span class="count-pill" id="count-pill">0</span>
+    </div>
+
+    <label class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept=".xls,.xlsx">
+      <div class="upload-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+        </svg>
+      </div>
+      <div class="upload-label">Drop Excel file here<br>or <span>browse to upload</span></div>
+      <div class="upload-filename" id="upload-filename"></div>
+    </label>
+
+    <div class="filter-row">
+      <button class="filter-btn active" data-f="all">All</button>
+      <button class="filter-btn" data-f="C">C-class</button>
+      <button class="filter-btn" data-f="A">A-class</button>
+    </div>
+
+    <div class="notam-list" id="notam-list">
+      <div class="empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Upload an Excel file<br>to load NOTAMs
+      </div>
+    </div>
+  </aside>
+
+  <!-- Centre: Map -->
+  <main class="map-wrap">
+    <div class="map-empty" id="map-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+      </svg>
+      Select a NOTAM to view its<br>polygon on the map
+    </div>
+    <div id="map"></div>
+    <div class="map-overlay" id="map-overlay"></div>
+  </main>
+
+  <!-- Right: GeoJSON inspector -->
+  <aside class="right">
+    <div class="panel-hd">
+      <span class="panel-hd-title">GeoJSON Output</span>
+    </div>
+
+    <div class="right-scroll" id="right-panel">
+      <div class="empty">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
+        </svg>
+        Select a NOTAM to preview<br>its ED-318 GeoJSON
+      </div>
+    </div>
+
+    <div class="dl-footer">
+      <button class="dl-btn" id="dl-btn" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+        </svg>
+        <span id="dl-label">Download GeoJSON</span>
+        <div class="spinner" id="dl-spinner"></div>
+      </button>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  notams:    [],
+  filtered:  [],
+  selected:  null,
+  geojson:   null,
+  filter:    'all',
+  map:       null,
+  mapLayer:  null,
+};
+
+// ── Map init ───────────────────────────────────────────────────────────────
+function initMap() {
+  state.map = L.map('map', {
+    center: [4.5, 109],
+    zoom: 5,
+    zoomControl: true,
+    attributionControl: true,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(state.map);
+}
+
+// ── Upload ─────────────────────────────────────────────────────────────────
+const fileInput    = document.getElementById('file-input');
+const uploadZone   = document.getElementById('upload-zone');
+const uploadName   = document.getElementById('upload-filename');
+
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) uploadFile(f);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) uploadFile(fileInput.files[0]);
+});
+
+async function uploadFile(file) {
+  uploadName.textContent = '⏳ Parsing…';
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res  = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    state.notams   = data.notams;
+    state.selected = null;
+    state.geojson  = null;
+    uploadName.textContent = file.name;
+    document.getElementById('hdr-meta').textContent =
+      `${data.total} NOTAM${data.total !== 1 ? 's' : ''} · ${file.name}`;
+    applyFilter();
+    clearRight();
+    clearMap();
+    toast(`Loaded ${data.total} NOTAMs`, 'ok');
+  } catch (err) {
+    uploadName.textContent = '';
+    toast(err.message, 'err');
+  }
+}
+
+// ── Filter ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.filter = btn.dataset.f;
+    applyFilter();
+  });
+});
+
+function applyFilter() {
+  const f = state.filter;
+  state.filtered = f === 'all' ? state.notams : state.notams.filter(n => n.notam_num.startsWith(f));
+  document.getElementById('count-pill').textContent = state.filtered.length;
+  renderList();
+}
+
+// ── Render list ────────────────────────────────────────────────────────────
+function renderList() {
+  const el = document.getElementById('notam-list');
+  if (state.filtered.length === 0) {
+    el.innerHTML = `<div class="empty">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      ${state.notams.length === 0 ? 'Upload a file to load NOTAMs' : 'No NOTAMs match this filter'}
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = state.filtered.map(n => {
+    const active  = state.selected && state.selected.notam_num === n.notam_num ? 'active' : '';
+    const isC     = n.notam_num.startsWith('C');
+    const nameM   = n.full_text.match(/\(([^)]+)\)/);
+    const name    = nameM ? nameM[1] : '—';
+    const expM    = n.expiration_date.match(/\d{2}\/\d{2}\/\d{4}/);
+    const exp     = expM ? expM[0] : n.expiration_date.slice(0, 10);
+    return `
+      <div class="notam-item ${active}" data-id="${n.notam_num}">
+        <div class="notam-row1">
+          <span class="notam-id">${n.notam_num}</span>
+          <span class="tag ${isC ? 'tag-c' : 'tag-a'}">${isC ? 'C' : 'A'}</span>
+        </div>
+        <div class="notam-name">${name}</div>
+        <div class="notam-dates">Exp: ${exp}</div>
+      </div>`;
+  }).join('');
+
+  el.querySelectorAll('.notam-item').forEach(item => {
+    item.addEventListener('click', () => selectNotam(item.dataset.id));
+  });
+}
+
+// ── Select NOTAM ───────────────────────────────────────────────────────────
+async function selectNotam(id) {
+  state.selected = state.notams.find(n => n.notam_num === id);
+  if (!state.selected) return;
+
+  renderList();
+  renderRightLoading();
+
+  try {
+    const res  = await fetch(`/api/preview/${encodeURIComponent(id)}`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(state.selected),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Conversion failed');
+    state.geojson = data;
+    renderMap(data);
+    renderRight(data);
+  } catch (err) {
+    toast(err.message, 'err');
+    clearRight();
+    clearMap();
+  }
+}
+
+// ── Map rendering ──────────────────────────────────────────────────────────
+function clearMap() {
+  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
+  document.getElementById('map-empty').style.display   = 'flex';
+  document.getElementById('map-overlay').style.display = 'none';
+}
+
+function renderMap(gj) {
+  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
+
+  const feat = gj.features[0];
+  if (!feat || !feat.geometry) { clearMap(); return; }
+
+  document.getElementById('map-empty').style.display = 'none';
+
+  state.mapLayer = L.geoJSON(feat, {
+    style: {
+      color:       '#388bfd',
+      weight:      2.5,
+      opacity:     1,
+      fillColor:   '#388bfd',
+      fillOpacity: 0.18,
+    },
+    pointToLayer: (feature, latlng) =>
+      L.circleMarker(latlng, { radius: 8, color: '#388bfd', weight: 2, fillColor: '#388bfd', fillOpacity: 0.5 }),
+  }).addTo(state.map);
+
+  const bounds = state.mapLayer.getBounds();
+  if (bounds.isValid()) state.map.fitBounds(bounds, { padding: [40, 40] });
+
+  const geomType = feat.geometry.type;
+  const pts = geomType === 'Polygon' ? feat.geometry.coordinates[0].length : 1;
+  const overlay = document.getElementById('map-overlay');
+  overlay.style.display = 'block';
+  overlay.textContent   = `${state.selected.notam_num}  ·  ${geomType}  ·  ${pts} pts`;
+}
+
+// ── Right panel ────────────────────────────────────────────────────────────
+function clearRight() {
+  document.getElementById('right-panel').innerHTML = `<div class="empty">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
+    </svg>
+    Select a NOTAM to preview<br>its ED-318 GeoJSON
+  </div>`;
+  document.getElementById('dl-btn').disabled = true;
+}
+
+function renderRightLoading() {
+  document.getElementById('right-panel').innerHTML = `<div class="empty">
+    <div class="spinner" style="display:block; width:24px; height:24px;"></div>
+    Converting…
+  </div>`;
+  document.getElementById('dl-btn').disabled = true;
+}
+
+function renderRight(gj) {
+  const p    = gj.features[0].properties;
+  const g    = p.geometry[0] || {};
+  const geom = gj.features[0].geometry;
+  const app  = p.applicability[0] || {};
+  const safe = state.selected.notam_num.replace('/', '_');
+  const isC  = state.selected.notam_num.startsWith('C');
+
+  const snippet = buildSnippet(gj);
+
+  document.getElementById('right-panel').innerHTML = `
+    <div class="field-block">
+      <div class="field-lbl">File name</div>
+      <div class="field-val mono">${safe}.geojson</div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Format</div>
+      <div class="field-val success">ED-318 GeoJSON ✓</div>
+    </div>
+    <div class="divider"></div>
+    <div class="field-block">
+      <div class="field-lbl">Identifier</div>
+      <div class="field-val" style="display:flex;align-items:center;gap:6px">
+        ${p.identifier}
+        <span class="tag ${isC ? 'tag-c' : 'tag-a'}">${isC ? 'C-class' : 'A-class'}</span>
+      </div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Name</div>
+      <div class="field-val">${p.name}</div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Zone type</div>
+      <div class="field-val">${p.type} <span style="color:var(--muted)">·</span> ${p.restriction}</div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Country</div>
+      <div class="field-val mono">${p.country}</div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Geometry</div>
+      <div class="field-val">${geom ? geom.type : 'None'}
+        <span style="color:var(--muted)">·</span>
+        <span class="mono">${geom && geom.type === 'Polygon' ? (geom.coordinates[0].length + ' pts') : '—'}</span>
+      </div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Altitude</div>
+      <div class="field-val mono">${g.lowerLimit ?? 0}m ${g.lowerVerticalReference ?? 'AGL'} → ${g.upperLimit ?? 0}m ${g.upperVerticalReference ?? 'AGL'}</div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Valid from</div>
+      <div class="field-val mono" style="font-size:10px">${app.startDateTime || '—'}</div>
+    </div>
+    <div class="field-block">
+      <div class="field-lbl">Valid to</div>
+      <div class="field-val mono" style="font-size:10px">${app.endDateTime || '—'}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="field-block">
+      <div class="field-lbl">Preview</div>
+      <div class="json-box">${snippet}</div>
+    </div>`;
+
+  const btn = document.getElementById('dl-btn');
+  btn.disabled = false;
+  btn.onclick  = () => downloadNotam();
+}
+
+function buildSnippet(gj) {
+  const slim = {
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature',
+      geometry: gj.features[0].geometry,
+      properties: {
+        identifier:  gj.features[0].properties.identifier,
+        name:        gj.features[0].properties.name,
+        type:        gj.features[0].properties.type,
+        restriction: gj.features[0].properties.restriction,
+        country:     gj.features[0].properties.country,
+      }
+    }]
+  };
+  return syntaxHL(JSON.stringify(slim, null, 2).slice(0, 800) + '\n…');
+}
+
+function syntaxHL(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) return /:$/.test(m) ? `<span class="jk">${m}</span>` : `<span class="js">${m}</span>`;
+      if (/true|false/.test(m)) return `<span class="jb">${m}</span>`;
+      if (/null/.test(m))       return `<span class="jb">${m}</span>`;
+      return `<span class="jn">${m}</span>`;
+    });
+}
+
+// ── Download ───────────────────────────────────────────────────────────────
+async function downloadNotam() {
+  if (!state.selected || !state.geojson) return;
+
+  const btn     = document.getElementById('dl-btn');
+  const label   = document.getElementById('dl-label');
+  const spinner = document.getElementById('dl-spinner');
+
+  btn.disabled      = true;
+  label.textContent = 'Downloading…';
+  spinner.style.display = 'block';
+
+  try {
+    const res = await fetch('/api/download', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(state.selected),
+    });
+    if (!res.ok) throw new Error('Download failed');
+
+    const blob = await res.blob();
+    const safe = state.selected.notam_num.replace('/', '_');
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: `${safe}.geojson` });
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`Downloaded ${safe}.geojson`, 'ok');
+  } catch (err) {
+    toast(err.message, 'err');
+  } finally {
+    btn.disabled          = false;
+    label.textContent     = 'Download GeoJSON';
+    spinner.style.display = 'none';
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+initMap();
+</script>
+</body>
+</html>
