@@ -1,702 +1,601 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NOTAM → ED-318 Converter</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Montserrat+Alternates:wght@600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:        #0d1117;
-    --surface:   #161b22;
-    --surface2:  #21262d;
-    --border:    #30363d;
-    --border2:   #484f58;
-    --accent:    #388bfd;
-    --accent-dim:#1f3a5c;
-    --success:   #3fb950;
-    --danger:    #f85149;
-    --warn:      #d29922;
-    --text:      #e6edf3;
-    --muted:     #7d8590;
-    --faint:     #444c56;
-    --mono:      'JetBrains Mono', monospace;
-    --sans:      'Syne', sans-serif;
-    --radius:    6px;
-    --left-w:    280px;
-    --right-w:   300px;
-  }
+[data-theme="dark"]{--bg:#0f1117;--surface:#181c27;--surface2:#1e2333;--surface3:#252b3b;--border:#2e3548;--border2:#3d4660;--accent:#e63946;--accent-dim:#3a1820;--accent2:#ff6b6b;--success:#2ec27e;--text:#eef0f8;--muted:#6e7a9a;--faint:#3a4060;--shadow:rgba(0,0,0,.5);--editor-bg:#0d1117;--map-filter:brightness(.85) saturate(.9)}
+[data-theme="light"]{--bg:#f2f4f9;--surface:#fff;--surface2:#f0f2f8;--surface3:#e8eaf2;--border:#d8dce8;--border2:#c0c5d8;--accent:#c1121f;--accent-dim:#fde8e9;--accent2:#e63946;--success:#2d8f5e;--text:#1a1d2e;--muted:#6b7494;--faint:#c8ccd8;--shadow:rgba(0,0,0,.12);--editor-bg:#f8f9fc;--map-filter:none}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Montserrat',sans-serif;font-size:13px;background:var(--bg);color:var(--text);overflow:hidden;transition:background .25s,color .25s}
+.app{display:grid;grid-template-columns:272px 1fr 320px;grid-template-rows:52px 1fr;height:100vh}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; overflow: hidden; }
+/* TOPBAR */
+.topbar{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid var(--border);background:var(--surface);box-shadow:0 2px 8px var(--shadow);z-index:100}
+.logo{display:flex;align-items:center;gap:9px;font-family:'Montserrat Alternates',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.03em}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{color:#fff}
+.logo-sub{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;display:block;margin-top:-2px}
+.topbar-sep{flex:1}
+.topbar-meta{font-size:11px;font-weight:500;color:var(--muted)}
+.tag{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase}
+.tag-ed318{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent)}
+.tag-A{background:var(--surface3);color:var(--muted);border:1px solid var(--border2)}
+.tag-B{background:#1a1a3a;color:#79c0ff;border:1px solid #79c0ff}
+.tag-C{background:#1a3a1a;color:#3fb950;border:1px solid #3fb950}
+.tag-D{background:#3a1a3a;color:#d2a8ff;border:1px solid #d2a8ff}
+.tag-E{background:#3a2800;color:#f2cc60;border:1px solid #f2cc60}
+.tag-F{background:#1a3030;color:#56d364;border:1px solid #56d364}
+[data-theme="light"] .tag-A{background:var(--surface2);color:var(--muted);border-color:var(--border2)}
+[data-theme="light"] .tag-B{background:#e8f0fd;color:#1a6fb5;border-color:#1a6fb5}
+[data-theme="light"] .tag-C{background:#e6f7ee;color:#2d8f5e;border-color:#2d8f5e}
+[data-theme="light"] .tag-D{background:#f2e8fd;color:#8250df;border-color:#8250df}
+[data-theme="light"] .tag-E{background:#fdf5e0;color:#b57600;border-color:#b57600}
+[data-theme="light"] .tag-F{background:#e6f5e9;color:#2d8f5e;border-color:#2d8f5e}
+.icon-btn{height:34px;padding:0 11px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;color:var(--text);transition:all .15s;white-space:nowrap}
+.icon-btn:hover{background:var(--surface3);border-color:var(--border2)}
+.icon-btn svg{color:var(--accent)}
+.theme-btn{width:34px;height:34px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;color:var(--muted);padding:0}
+.theme-btn:hover{color:var(--text);background:var(--surface3);border-color:var(--border2)}
 
-  .app { display: grid; grid-template-columns: var(--left-w) 1fr var(--right-w); grid-template-rows: 48px 1fr; height: 100vh; }
+/* LEFT */
+.left{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
+.panel-hd{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.panel-hd-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;flex:1}
+.count-pill{font-size:10px;font-weight:600;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:1px 8px}
+.upload-zone{margin:10px;border:1.5px dashed var(--border2);border-radius:8px;padding:14px 10px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;flex-shrink:0}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-dim)}
+.upload-zone input{display:none}
+.upload-label{color:var(--muted);font-size:11px;font-weight:500;line-height:1.5}
+.upload-label span{color:var(--accent);font-weight:700}
+.upload-filename{margin-top:5px;font-size:10px;font-weight:600;color:var(--success)}
 
-  /* Top bar */
-  .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .topbar-logo { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
-  .topbar-logo svg { color: var(--accent); }
-  .topbar-sep { flex: 1; }
-  .topbar-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-  .tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase; }
-  .tag-ed318 { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
-  .tag-c { background: #1a3a1a; color: var(--success); border: 1px solid var(--success); }
-  .tag-a { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+/* Filters */
+.filter-section{padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.filter-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px}
+.filter-grid-2{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.fb{font-size:10px;font-family:'Montserrat',sans-serif;font-weight:700;padding:5px 2px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;transition:all .1s;text-align:center}
+.fb:hover:not(.active){border-color:var(--border2);color:var(--text);background:var(--surface3)}
+.fb.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.fb[data-f="A"].active{border-color:var(--border2);color:var(--text);background:var(--surface3)}
+.fb[data-f="B"].active{border-color:#79c0ff;color:#79c0ff;background:#1a1a3a}
+.fb[data-f="C"].active{border-color:#3fb950;color:#3fb950;background:#1a3a1a}
+.fb[data-f="D"].active{border-color:#d2a8ff;color:#d2a8ff;background:#3a1a3a}
+.fb[data-f="E"].active{border-color:#f2cc60;color:#f2cc60;background:#3a2800}
+.fb[data-f="F"].active{border-color:#56d364;color:#56d364;background:#1a3030}
+[data-theme="light"] .fb[data-f="B"].active{background:#e8f0fd;color:#1a6fb5;border-color:#1a6fb5}
+[data-theme="light"] .fb[data-f="C"].active{background:#e6f7ee;color:#2d8f5e;border-color:#2d8f5e}
+[data-theme="light"] .fb[data-f="D"].active{background:#f2e8fd;color:#8250df;border-color:#8250df}
+[data-theme="light"] .fb[data-f="E"].active{background:#fdf5e0;color:#b57600;border-color:#b57600}
+[data-theme="light"] .fb[data-f="F"].active{background:#e6f5e9;color:#2d8f5e;border-color:#2d8f5e}
 
-  /* Left panel */
-  .left { border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
-  .panel-hd { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .panel-hd-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; flex: 1; }
-  .count-pill { font-family: var(--mono); font-size: 10px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 1px 8px; }
+/* Select row */
+.select-row{padding:6px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--muted)}
+.select-row input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer}
+.sel-count{margin-left:auto;font-size:10px;font-weight:700;color:var(--accent)}
 
-  .upload-zone { margin: 12px; border: 1px dashed var(--border2); border-radius: var(--radius); padding: 20px 12px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; flex-shrink: 0; }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
-  .upload-zone input { display: none; }
-  .upload-icon { color: var(--muted); margin-bottom: 8px; }
-  .upload-label { color: var(--muted); font-size: 12px; line-height: 1.5; }
-  .upload-label span { color: var(--accent); }
-  .upload-filename { margin-top: 6px; font-family: var(--mono); font-size: 10px; color: var(--success); }
+/* NOTAM list */
+.notam-list{flex:1;overflow-y:auto}
+.notam-list::-webkit-scrollbar{width:3px}
+.notam-list::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px}
+.ni{padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;display:flex;gap:8px;align-items:flex-start}
+.ni:hover{background:var(--surface2)}
+.ni.active{background:var(--accent-dim);border-left:3px solid var(--accent)}
+.ni.active .ni-id{color:var(--accent)}
+.ni-cb{margin-top:3px;accent-color:var(--accent);width:13px;height:13px;flex-shrink:0;cursor:pointer}
+.ni-body{flex:1;min-width:0}
+.ni-row1{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.ni-id{font-size:11px;font-weight:700}
+.ni-name{font-size:11px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.ni-date{font-size:10px;color:var(--faint);font-weight:500}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 20px;color:var(--muted);font-size:12px;font-weight:500;text-align:center;height:100%}
+.empty svg{color:var(--faint)}
 
-  .filter-row { padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; flex-shrink: 0; }
-  .filter-btn { flex: 1; font-size: 11px; font-family: var(--sans); font-weight: 500; padding: 4px 0; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); color: var(--muted); cursor: pointer; transition: all 0.1s; }
-  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-  .filter-btn:hover:not(.active) { border-color: var(--border2); color: var(--text); }
+/* MAP */
+.map-wrap{position:relative;overflow:hidden}
+#map{width:100%;height:100%;filter:var(--map-filter)}
+.map-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);color:var(--muted);font-size:13px;font-weight:500;text-align:center;z-index:500;pointer-events:none}
+.map-empty svg{color:var(--faint)}
+.map-badge{position:absolute;top:10px;left:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;color:var(--muted);z-index:1000;display:none;box-shadow:0 2px 8px var(--shadow)}
+.leaflet-container{background:var(--bg) !important}
 
-  .notam-list { flex: 1; overflow-y: auto; }
-  .notam-list::-webkit-scrollbar { width: 4px; }
-  .notam-list::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+/* RIGHT */
+.right{border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
+.right-scroll{flex:1;overflow-y:auto;padding:14px}
+.right-scroll::-webkit-scrollbar{width:3px}
+.right-scroll::-webkit-scrollbar-thumb{background:var(--faint);border-radius:2px}
+.field-block{margin-bottom:14px}
+.field-lbl{font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.field-val{font-size:12px;font-weight:500}
+.field-val.mono{font-family:monospace;font-size:11px;color:var(--muted)}
+.field-val.ok{color:var(--success);font-weight:700}
+.divider{height:1px;background:var(--border);margin:10px 0}
 
-  .notam-item { padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
-  .notam-item:hover { background: var(--surface2); }
-  .notam-item.active { background: var(--accent-dim); border-left: 3px solid var(--accent); }
-  .notam-item.active .notam-id { color: var(--accent); }
-  .notam-row1 { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
-  .notam-id { font-family: var(--mono); font-size: 12px; font-weight: 500; }
-  .notam-name { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
-  .notam-dates { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+/* JSON Editor */
+.editor-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.editor-chip{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent)}
+.json-editor{width:100%;min-height:170px;max-height:260px;resize:vertical;background:var(--editor-bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:10px;color:var(--text);line-height:1.65;outline:none;transition:border-color .15s;tab-size:2}
+.json-editor:focus{border-color:var(--accent)}
+.json-badge{font-size:9px;font-weight:700;margin-top:4px;padding:3px 8px;border-radius:4px;display:inline-block}
+.json-badge.ok{background:#1a3a1a;color:var(--success)}
+.json-badge.err{background:#3a1a1a;color:#f85149}
+[data-theme="light"] .json-badge.ok{background:#e6f7ee;color:#2d8f5e}
+[data-theme="light"] .json-badge.err{background:#fde8e9;color:#c1121f}
 
-  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 40px 20px; color: var(--muted); font-size: 12px; text-align: center; height: 100%; }
-  .empty svg { color: var(--faint); }
+/* Footer */
+.dl-footer{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.dl-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:filter .15s,transform .1s}
+.dl-btn:hover{filter:brightness(1.1)}
+.dl-btn:active{transform:scale(.98)}
+.dl-btn:disabled{background:var(--surface3);color:var(--faint);border:1px solid var(--border);cursor:not-allowed;filter:none;transform:none}
 
-  /* Map */
-  .map-wrap { position: relative; overflow: hidden; }
-  #map { width: 100%; height: 100%; }
-  .map-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--bg); color: var(--muted); font-size: 13px; text-align: center; z-index: 500; pointer-events: none; }
-  .map-empty svg { color: var(--faint); }
-  .map-overlay { position: absolute; top: 12px; left: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; font-family: var(--mono); font-size: 11px; color: var(--muted); z-index: 1000; display: none; }
-  .leaflet-container { background: var(--bg) !important; }
+/* BULK MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:460px;max-width:92vw;box-shadow:0 20px 60px var(--shadow);transform:translateY(16px);transition:transform .2s}
+.overlay.open .modal{transform:none}
+.modal-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.modal-title{font-size:14px;font-weight:700;flex:1}
+.modal-x{background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;padding:4px;border-radius:4px;transition:color .1s}
+.modal-x:hover{color:var(--text)}
+.modal-body{padding:18px 20px}
+.modal-info{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:12px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;margin-bottom:10px}
+.opt:hover{border-color:var(--accent2);background:var(--accent-dim)}
+.opt.sel{border-color:var(--accent);background:var(--accent-dim)}
+.opt input[type=radio]{accent-color:var(--accent);margin-top:2px;flex-shrink:0}
+.opt-title{font-size:12px;font-weight:700;margin-bottom:3px}
+.opt-desc{font-size:11px;font-weight:500;color:var(--muted)}
+.modal-ft{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:background .1s}
+.btn-cancel:hover{background:var(--surface3)}
+.btn-export{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:filter .15s}
+.btn-export:hover{filter:brightness(1.1)}
+.btn-export:disabled{background:var(--surface3);color:var(--faint);cursor:not-allowed;filter:none}
 
-  /* Right panel */
-  .right { border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
-  .right-scroll { flex: 1; overflow-y: auto; padding: 14px; }
-  .right-scroll::-webkit-scrollbar { width: 4px; }
-  .right-scroll::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
-
-  .field-block { margin-bottom: 16px; }
-  .field-lbl { font-size: 10px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-  .field-val { font-size: 13px; color: var(--text); }
-  .field-val.mono { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-  .field-val.success { color: var(--success); font-weight: 600; }
-  .divider { height: 1px; background: var(--border); margin: 12px 0; }
-
-  .json-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; font-family: var(--mono); font-size: 10px; color: var(--muted); line-height: 1.6; max-height: 180px; overflow-y: auto; white-space: pre; word-break: break-all; }
-  .json-box::-webkit-scrollbar { width: 3px; }
-  .json-box::-webkit-scrollbar-thumb { background: var(--faint); }
-  .jk { color: #79c0ff; } .js { color: #a5d6ff; } .jn { color: #f2cc60; } .jb { color: #ff7b72; }
-
-  .dl-footer { padding: 12px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
-  .dl-btn { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s, transform 0.1s; }
-  .dl-btn:hover { background: #58a6ff; }
-  .dl-btn:active { transform: scale(0.98); }
-  .dl-btn:disabled { background: var(--surface2); color: var(--faint); border: 1px solid var(--border); cursor: not-allowed; transform: none; }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
-
-  .toast { position: fixed; bottom: 24px; right: 24px; padding: 10px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all 0.2s; z-index: 9999; pointer-events: none; }
-  .toast.show { opacity: 1; transform: none; }
-  .toast.ok  { background: #1a3a1a; color: var(--success); border: 1px solid var(--success); }
-  .toast.err { background: #3a1a1a; color: var(--danger);  border: 1px solid var(--danger); }
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;padding:9px 15px;border-radius:7px;font-size:12px;font-weight:600;opacity:0;transform:translateY(8px);transition:all .2s;z-index:9999;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+.toast.ok{background:#1a3a1a;color:#3fb950;border:1px solid #3fb950}
+.toast.err{background:#3a1a1a;color:#f85149;border:1px solid #f85149}
+[data-theme="light"] .toast.ok{background:#e6f7ee;color:#2d8f5e;border-color:#2d8f5e}
+[data-theme="light"] .toast.err{background:#fde8e9;color:#c1121f;border-color:#c1121f}
 </style>
 </head>
 <body>
 
+<!-- SVG zigzag pattern definition — shared across Leaflet's SVG renderer -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">
+  <defs>
+    <pattern id="zzpat" x="0" y="0" width="20" height="12" patternUnits="userSpaceOnUse">
+      <polyline points="0,6 5,0 10,6 15,0 20,6" fill="none" stroke="#e63946" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <polyline points="0,12 5,6 10,12 15,6 20,12" fill="none" stroke="#e63946" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    </pattern>
+  </defs>
+</svg>
+
 <div class="app">
 
-  <!-- Top bar -->
-  <header class="topbar">
-    <div class="topbar-logo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-      NOTAM → ED-318
-    </div>
-    <span class="tag tag-ed318">EUROCAE ED-318</span>
-    <div class="topbar-sep"></div>
-    <span class="topbar-meta" id="hdr-meta">No file loaded</span>
-  </header>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <div>NOTAM → ED-318<span class="logo-sub">GeoJSON Converter</span></div>
+  </div>
+  <span class="tag tag-ed318">EUROCAE ED-318</span>
+  <div class="topbar-sep"></div>
+  <span class="topbar-meta" id="hdr-meta">No file loaded</span>
+  <button class="icon-btn" onclick="openBulk()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8h10M9 12h10M9 16h10M4.99 8H5m-.02 4h.01m0 4h.01"/></svg>
+    Bulk Export
+  </button>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+    <svg id="th-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
+</header>
 
-  <!-- Left: NOTAM list -->
-  <aside class="left">
-    <div class="panel-hd">
-      <span class="panel-hd-title">NOTAMs</span>
-      <span class="count-pill" id="count-pill">0</span>
-    </div>
+<!-- LEFT -->
+<aside class="left">
+  <div class="panel-hd">
+    <span class="panel-hd-title">NOTAMs</span>
+    <span class="count-pill" id="count-pill">0</span>
+  </div>
+  <label class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept=".xls,.xlsx">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="margin-bottom:6px">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+    </svg>
+    <div class="upload-label">Drop Excel file here or <span>browse</span></div>
+    <div class="upload-filename" id="upload-filename"></div>
+  </label>
 
-    <label class="upload-zone" id="upload-zone">
-      <input type="file" id="file-input" accept=".xls,.xlsx">
-      <div class="upload-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-        </svg>
+  <div class="filter-section">
+    <div class="filter-lbl">Filter by class</div>
+    <div class="filter-grid">
+      <button class="fb active" data-f="all">All</button>
+      <button class="fb" data-f="A">A</button>
+      <button class="fb" data-f="B">B</button>
+      <button class="fb" data-f="C">C</button>
+    </div>
+    <div class="filter-grid-2">
+      <button class="fb" data-f="D">D</button>
+      <button class="fb" data-f="E">E</button>
+      <button class="fb" data-f="F">F</button>
+    </div>
+  </div>
+
+  <div class="select-row">
+    <input type="checkbox" id="sel-all" onchange="toggleSelAll(this.checked)">
+    <label for="sel-all" style="cursor:pointer">Select all visible</label>
+    <span class="sel-count" id="sel-count"></span>
+  </div>
+
+  <div class="notam-list" id="notam-list">
+    <div class="empty">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Upload an Excel file<br>to load NOTAMs
+    </div>
+  </div>
+</aside>
+
+<!-- MAP -->
+<main class="map-wrap">
+  <div class="map-empty" id="map-empty">
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+    Select a NOTAM to view its polygon
+  </div>
+  <div id="map"></div>
+  <div class="map-badge" id="map-badge"></div>
+</main>
+
+<!-- RIGHT -->
+<aside class="right">
+  <div class="panel-hd"><span class="panel-hd-title">GeoJSON Output</span></div>
+  <div class="right-scroll" id="right-panel">
+    <div class="empty">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+      Select a NOTAM to preview<br>its ED-318 GeoJSON
+    </div>
+  </div>
+  <div class="dl-footer">
+    <button class="dl-btn" id="dl-btn" disabled onclick="dlSingle()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+      Download GeoJSON
+    </button>
+  </div>
+</aside>
+</div>
+
+<!-- BULK MODAL -->
+<div class="overlay" id="bulk-overlay" onclick="if(event.target===this)closeBulk()">
+  <div class="modal">
+    <div class="modal-hd">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8h10M9 12h10M9 16h10M4.99 8H5m-.02 4h.01m0 4h.01"/></svg>
+      <span class="modal-title">Bulk Export NOTAMs</span>
+      <button class="modal-x" onclick="closeBulk()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info" id="modal-info">—</div>
+      <div class="opt sel" id="opt-combined" onclick="setMode('combined')">
+        <input type="radio" name="bmode" value="combined" checked>
+        <div><div class="opt-title">One combined GeoJSON file</div><div class="opt-desc">All selected NOTAMs merged into a single ED-318 FeatureCollection</div></div>
       </div>
-      <div class="upload-label">Drop Excel file here<br>or <span>browse to upload</span></div>
-      <div class="upload-filename" id="upload-filename"></div>
-    </label>
-
-    <div class="filter-row">
-      <button class="filter-btn active" data-f="all">All</button>
-      <button class="filter-btn" data-f="C">C-class</button>
-      <button class="filter-btn" data-f="A">A-class</button>
-    </div>
-
-    <div class="notam-list" id="notam-list">
-      <div class="empty">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        Upload an Excel file<br>to load NOTAMs
+      <div class="opt" id="opt-individual" onclick="setMode('individual')">
+        <input type="radio" name="bmode" value="individual">
+        <div><div class="opt-title">Individual files (ZIP)</div><div class="opt-desc">One GeoJSON per NOTAM, packaged into a downloadable .zip archive</div></div>
       </div>
     </div>
-  </aside>
-
-  <!-- Centre: Map -->
-  <main class="map-wrap">
-    <div class="map-empty" id="map-empty">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-        <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-      </svg>
-      Select a NOTAM to view its<br>polygon on the map
-    </div>
-    <div id="map"></div>
-    <div class="map-overlay" id="map-overlay"></div>
-  </main>
-
-  <!-- Right: GeoJSON inspector -->
-  <aside class="right">
-    <div class="panel-hd">
-      <span class="panel-hd-title">GeoJSON Output</span>
-    </div>
-    <div class="right-scroll" id="right-panel">
-      <div class="empty">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
-        </svg>
-        Select a NOTAM to preview<br>its ED-318 GeoJSON
-      </div>
-    </div>
-    <div class="dl-footer">
-      <button class="dl-btn" id="dl-btn" disabled>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-        </svg>
-        <span id="dl-label">Download GeoJSON</span>
-        <div class="spinner" id="dl-spinner"></div>
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="closeBulk()">Cancel</button>
+      <button class="btn-export" id="btn-export" onclick="runBulk()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Export
       </button>
     </div>
-  </aside>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- SheetJS for Excel parsing in the browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════════════════════════
-// CONVERTER — all Python logic ported to JavaScript
-// Mirrors converter.py exactly so output is identical
-// ═══════════════════════════════════════════════════════════════════════════
-
-// ── Coordinate parsing ────────────────────────────────────────────────────
-
-function dmsToDD(str) {
-  str = str.trim();
-  if (!str) return null;
-  const hemi = str.slice(-1).toUpperCase();
-  const num  = str.slice(0, -1);
-  const dot  = num.indexOf('.');
-  let intDigits = dot >= 0 ? num.slice(0, dot) : num;
-  const decPart = dot >= 0 ? num.slice(dot + 1) : '0';
-  const expectedLen = (hemi === 'N' || hemi === 'S') ? 6 : 7;
-  intDigits = intDigits.padStart(expectedLen, '0');
-  if (intDigits.length < expectedLen) return null;
-  let deg, mins, secs;
-  try {
-    if (hemi === 'N' || hemi === 'S') {
-      deg  = parseInt(intDigits.slice(0, 2));
-      mins = parseInt(intDigits.slice(2, 4));
-      secs = parseFloat(intDigits.slice(4, 6) + '.' + decPart);
-    } else {
-      deg  = parseInt(intDigits.slice(0, 3));
-      mins = parseInt(intDigits.slice(3, 5));
-      secs = parseFloat(intDigits.slice(5, 7) + '.' + decPart);
-    }
-  } catch(e) { return null; }
-  let dd = deg + mins / 60.0 + secs / 3600.0;
-  if (hemi === 'S' || hemi === 'W') dd = -dd;
-  return Math.round(dd * 1e8) / 1e8;
+/* ── CONVERTER LOGIC ─────────────────────────────────────────── */
+function dmsToDD(s){
+  s=s.trim();if(!s)return null;
+  const h=s.slice(-1).toUpperCase(),n=s.slice(0,-1),dot=n.indexOf('.');
+  let id=dot>=0?n.slice(0,dot):n; const dc=dot>=0?n.slice(dot+1):'0';
+  const el=(h==='N'||h==='S')?6:7; id=id.padStart(el,'0');
+  if(id.length<el)return null;
+  let d,m,sec;
+  try{if(h==='N'||h==='S'){d=+id.slice(0,2);m=+id.slice(2,4);sec=parseFloat(id.slice(4,6)+'.'+dc);}
+  else{d=+id.slice(0,3);m=+id.slice(3,5);sec=parseFloat(id.slice(5,7)+'.'+dc);}}
+  catch(e){return null;}
+  let dd=d+m/60+sec/3600; if(h==='S'||h==='W')dd=-dd;
+  return Math.round(dd*1e8)/1e8;
 }
-
-function extractCoordinates(eField) {
-  const pat = /(\d{6}(?:\.\d+)?[NS])\s*(\d{6,7}(?:\.\d+)?[EW])/gi;
-  const coords = [];
-  let m;
-  while ((m = pat.exec(eField)) !== null) {
-    const lat = dmsToDD(m[1]);
-    const lon = dmsToDD(m[2]);
-    if (lat !== null && lon !== null) coords.push([lon, lat]);
-  }
-  return coords;
+function exCoords(ef){
+  const p=/(\d{6}(?:\.\d+)?[NS])\s*(\d{6,7}(?:\.\d+)?[EW])/gi,c=[];
+  let m;while((m=p.exec(ef))!==null){const la=dmsToDD(m[1]),lo=dmsToDD(m[2]);if(la!==null&&lo!==null)c.push([lo,la]);}
+  return c;
 }
-
-function qLineCenter(qLine) {
-  const m = qLine.trim().match(/(\d{4}[NS])(\d{5}[EW])(\d{3})\s*$/);
-  if (!m) return null;
-  let lat = parseInt(m[1].slice(0,2)) + parseInt(m[1].slice(2,4)) / 60.0;
-  if (m[1][4] === 'S') lat = -lat;
-  let lon = parseInt(m[2].slice(0,3)) + parseInt(m[2].slice(3,5)) / 60.0;
-  if (m[2][5] === 'W') lon = -lon;
-  return { lat: Math.round(lat*1e6)/1e6, lon: Math.round(lon*1e6)/1e6, r: parseInt(m[3]) };
+function qlCenter(q){
+  const m=q.trim().match(/(\d{4}[NS])(\d{5}[EW])(\d{3})\s*$/);if(!m)return null;
+  let la=+m[1].slice(0,2)+ +m[1].slice(2,4)/60; if(m[1][4]==='S')la=-la;
+  let lo=+m[2].slice(0,3)+ +m[2].slice(3,5)/60; if(m[2][5]==='W')lo=-lo;
+  return{lat:Math.round(la*1e6)/1e6,lon:Math.round(lo*1e6)/1e6,r:+m[3]};
 }
-
-function circleToPolygon(lat, lon, radiusNm, n = 64) {
-  const rm   = radiusNm * 1852;
-  const R    = 6371000;
-  const latR = lat * Math.PI / 180;
-  const lonR = lon * Math.PI / 180;
-  const dR   = rm / R;
-  const ring = [];
-  for (let i = 0; i <= n; i++) {
-    const b    = (i * 360 / n) * Math.PI / 180;
-    const pLat = Math.asin(Math.sin(latR)*Math.cos(dR) + Math.cos(latR)*Math.sin(dR)*Math.cos(b));
-    const pLon = lonR + Math.atan2(Math.sin(b)*Math.sin(dR)*Math.cos(latR), Math.cos(dR)-Math.sin(latR)*Math.sin(pLat));
-    ring.push([Math.round(pLon*180/Math.PI*1e6)/1e6, Math.round(pLat*180/Math.PI*1e6)/1e6]);
-  }
-  return [ring];
+function circlePoly(lat,lon,nm,n=64){
+  const rm=nm*1852,R=6371000,lr=lat*Math.PI/180,pr=lon*Math.PI/180,dr=rm/R,ring=[];
+  for(let i=0;i<=n;i++){const b=(i*360/n)*Math.PI/180;
+    const pl=Math.asin(Math.sin(lr)*Math.cos(dr)+Math.cos(lr)*Math.sin(dr)*Math.cos(b));
+    const pp=pr+Math.atan2(Math.sin(b)*Math.sin(dr)*Math.cos(lr),Math.cos(dr)-Math.sin(lr)*Math.sin(pl));
+    ring.push([Math.round(pp*180/Math.PI*1e6)/1e6,Math.round(pl*180/Math.PI*1e6)/1e6]);}
+  return[ring];
 }
-
-function buildGeometry(coords, qLine) {
-  const c = qLineCenter(qLine);
-  if (coords.length >= 3) {
-    const ring = [...coords];
-    if (JSON.stringify(ring[0]) !== JSON.stringify(ring[ring.length-1])) ring.push(ring[0]);
-    return { type: 'Polygon', coordinates: [ring] };
-  }
-  if (coords.length === 1) {
-    if (c && c.r > 0) return { type: 'Polygon', coordinates: circleToPolygon(coords[0][1], coords[0][0], c.r) };
-    return { type: 'Point', coordinates: coords[0] };
-  }
-  if (c) {
-    if (c.r > 0) return { type: 'Polygon', coordinates: circleToPolygon(c.lat, c.lon, c.r) };
-    return { type: 'Point', coordinates: [c.lon, c.lat] };
-  }
+function buildGeom(c,q){
+  const ct=qlCenter(q);
+  if(c.length>=3){const r=[...c];if(JSON.stringify(r[0])!==JSON.stringify(r[r.length-1]))r.push(r[0]);return{type:'Polygon',coordinates:[r]};}
+  if(c.length===1){if(ct&&ct.r>0)return{type:'Polygon',coordinates:circlePoly(c[0][1],c[0][0],ct.r)};return{type:'Point',coordinates:c[0]};}
+  if(ct){if(ct.r>0)return{type:'Polygon',coordinates:circlePoly(ct.lat,ct.lon,ct.r)};return{type:'Point',coordinates:[ct.lon,ct.lat]};}
   return null;
 }
-
-// ── Altitude parsing ───────────────────────────────────────────────────────
-
-function parseAltitude(s) {
-  s = (s || '').trim().toUpperCase();
-  if (!s || s === 'SFC' || s === 'GND' || s === 'MSL') return { val: 0, ref: 'AGL' };
-  let m = s.match(/FL\s*(\d+)/);
-  if (m) return { val: parseInt(m[1]) * 30, ref: 'STD' };
-  m = s.match(/(\d+(?:\.\d+)?)\s*FT\s*(AGL|AMSL|MSL)?/);
-  if (m) return { val: Math.round(parseFloat(m[1]) * 0.3048), ref: (m[2] || 'AGL').replace('MSL','AMSL') };
-  m = s.match(/(\d+(?:\.\d+)?)\s*M\b/);
-  if (m) return { val: Math.round(parseFloat(m[1])), ref: 'AGL' };
-  return { val: 0, ref: 'AGL' };
+function pAlt(s){
+  s=(s||'').trim().toUpperCase();if(!s||s==='SFC'||s==='GND'||s==='MSL')return{v:0,r:'AGL'};
+  let m=s.match(/FL\s*(\d+)/);if(m)return{v:+m[1]*30,r:'STD'};
+  m=s.match(/(\d+(?:\.\d+)?)\s*FT\s*(AGL|AMSL|MSL)?/);if(m)return{v:Math.round(+m[1]*.3048),r:(m[2]||'AGL').replace('MSL','AMSL')};
+  m=s.match(/(\d+(?:\.\d+)?)\s*M\b/);if(m)return{v:Math.round(+m[1]),r:'AGL'};
+  return{v:0,r:'AGL'};
 }
-
-// ── Date / time parsing ────────────────────────────────────────────────────
-
-function parseNotamDatetime(s) {
-  s = String(s || '').trim();
-  if (s.length !== 10) return null;
-  try {
-    const y=2000+parseInt(s.slice(0,2)), mo=s.slice(2,4), d=s.slice(4,6), h=s.slice(6,8), mi=s.slice(8,10);
-    return `${y}-${mo}-${d}T${h}:${mi}:00Z`;
-  } catch(e) { return null; }
+function pDT(s){s=String(s||'').trim();if(s.length!==10)return null;try{const y=2000+ +s.slice(0,2);return`${y}-${s.slice(2,4)}-${s.slice(4,6)}T${s.slice(6,8)}:${s.slice(8,10)}:00Z`;}catch(e){return null;}}
+function pXD(s){s=String(s||'').trim();const m=s.match(/(\d{2})\/(\d{2})\/(\d{4})\s*(\d{4})?/);if(m)return`${m[3]}-${m[1]}-${m[2]}T${m[4]?m[4].slice(0,2)+':'+m[4].slice(2):'00:00'}:00Z`;return s;}
+function gf(t,l){const m=t.match(new RegExp(`${l}\\)\\s*(.*?)(?=\\n[A-Z]\\)|$)`,'s'));return m?m[1].trim():'';}
+function gql(t){const m=t.match(/Q\)\s*(.+)/);return m?m[0].trim():'';}
+const QM={'QWULW':['COMMON','REQ_AUTHORISATION'],'QRDCA':['PROHIBITED','PROHIBITED'],'QRRCA':['RESTRICTED','REQ_AUTHORISATION'],'QDUCA':['DANGER','CONDITIONAL'],'QRTCA':['RESTRICTED','REQ_AUTHORISATION'],'QWLAW':['COMMON','CONDITIONAL']};
+const IC={'WM':'MYS','WS':'SGP','VH':'AUS','EG':'GBR','ED':'DEU','LF':'FRA','EH':'NLD','KZ':'USA','K':'USA','CY':'CAN','RJ':'JPN'};
+function qInfo(q){const m=q.match(/\/([A-Z]{5})\//);if(m){if(QM[m[1]])return QM[m[1]];if(m[1].startsWith('QR'))return['RESTRICTED','REQ_AUTHORISATION'];if(m[1].startsWith('QD'))return['DANGER','CONDITIONAL'];if(m[1].startsWith('QP'))return['PROHIBITED','PROHIBITED'];}return['COMMON','REQ_AUTHORISATION'];}
+function gCountry(l){for(const[p,c]of Object.entries(IC))if(l.startsWith(p))return c;return'MYS';}
+function bSched(d,b,c){if(!d)return(b&&c)?[{startDateTime:b,endDateTime:c}]:[];const dy=d.trim().match(/^(?:DLY\s+)?(\d{4})-(\d{4})$/);if(dy){const s=dy[1],e=dy[2];return[{startDateTime:b,endDateTime:c,schedule:[{day:['MON','TUE','WED','THU','FRI','SAT','SUN'],startTime:`${s.slice(0,2)}:${s.slice(2)}`,endTime:`${e.slice(0,2)}:${e.slice(2)}`}]}];}return[{startDateTime:b,endDateTime:c,rawSchedule:d}];}
+function toFeat(row){
+  const full=String(row.full_text||''),num=String(row.notam_num||'').trim(),loc=String(row.location||'').trim();
+  const q=gql(full),ef=gf(full,'E'),ft=gf(full,'F')||'SFC';
+  const gr=gf(full,'G'),gt=gr.replace(/\s*F\).*$/s,'').trim(),df=gf(full,'D')||null;
+  const bm=full.match(/B\)\s*(\d{10})/),cm=full.match(/C\)\s*(\d{10})/);
+  const b=bm?pDT(bm[1]):pXD(row.effective_date),c=cm?pDT(cm[1]):pXD(row.expiration_date);
+  const[zt,rt]=qInfo(q),nm=ef.match(/\(([^)]+)\)/),lo=pAlt(ft),up=pAlt(gt);
+  const co=exCoords(ef),ge=buildGeom(co,q);
+  return{type:'Feature',geometry:ge,properties:{
+    identifier:num,country:gCountry(loc),name:nm?nm[1].trim():num,type:zt,restriction:rt,
+    restrictionConditions:'',reason:['AIR_TRAFFIC'],otherReasonInfo:'',
+    regulationExemption:(ef.includes('SUBJ ATC')||ef.includes('SUBJ TO ATC'))?'YES':'',
+    uSpaceClass:'',message:ef,applicability:bSched(df,b,c),
+    zoneAuthority:[{name:loc,service:'INFORMATION',email:'',contactName:'',siteURL:'',phone:'',purpose:'INFORMATION',intervalBefore:'PT24H'}],
+    geometry:ge?[{uomDimensions:'M',lowerLimit:lo.v,lowerVerticalReference:lo.r,upperLimit:up.v,upperVerticalReference:up.r,horizontalProjection:ge}]:[],
+    _source:{notamNumber:num,fir:loc,issueDate:pXD(row.issue_date),effectiveDate:b,expirationDate:c,classification:row.classification,rawQLine:q}
+  }};
 }
-
-function parseExcelDate(s) {
-  s = String(s || '').trim();
-  // MM/DD/YYYY HHMM
-  let m = s.match(/(\d{2})\/(\d{2})\/(\d{4})\s*(\d{4})?/);
-  if (m) return `${m[3]}-${m[1]}-${m[2]}T${m[4] ? m[4].slice(0,2)+':'+m[4].slice(2) : '00:00'}:00Z`;
-  return s;
-}
-
-// ── Field extraction helpers ───────────────────────────────────────────────
-
-const QCODE_MAP = {
-  'QWULW': ['COMMON','REQ_AUTHORISATION'],
-  'QRDCA': ['PROHIBITED','PROHIBITED'],
-  'QRRCA': ['RESTRICTED','REQ_AUTHORISATION'],
-  'QDUCA': ['DANGER','CONDITIONAL'],
-  'QRTCA': ['RESTRICTED','REQ_AUTHORISATION'],
-  'QWLAW': ['COMMON','CONDITIONAL'],
-};
-
-const ICAO_COUNTRY = { 'WM':'MYS','WS':'SGP','VH':'AUS','EG':'GBR','ED':'DEU','LF':'FRA','EH':'NLD','KZ':'USA','K':'USA','CY':'CAN','RJ':'JPN' };
-
-function getField(text, letter) {
-  const re = new RegExp(`${letter}\\)\\s*(.*?)(?=\\n[A-Z]\\)|$)`, 's');
-  const m  = text.match(re);
-  return m ? m[1].trim() : '';
-}
-
-function getQLine(text) {
-  const m = text.match(/Q\)\s*(.+)/);
-  return m ? m[0].trim() : '';
-}
-
-function qcodeInfo(qLine) {
-  const m = qLine.match(/\/([A-Z]{5})\//);
-  if (m) {
-    if (QCODE_MAP[m[1]]) return QCODE_MAP[m[1]];
-    if (m[1].startsWith('QR')) return ['RESTRICTED','REQ_AUTHORISATION'];
-    if (m[1].startsWith('QD')) return ['DANGER','CONDITIONAL'];
-    if (m[1].startsWith('QP')) return ['PROHIBITED','PROHIBITED'];
-  }
-  return ['COMMON','REQ_AUTHORISATION'];
-}
-
-function getCountry(loc) {
-  for (const [prefix, cc] of Object.entries(ICAO_COUNTRY)) {
-    if (loc.startsWith(prefix)) return cc;
-  }
-  return 'MYS';
-}
-
-function buildSchedule(dField, bDt, cDt) {
-  if (!dField) return (bDt && cDt) ? [{ startDateTime: bDt, endDateTime: cDt }] : [];
-  const daily = dField.trim().match(/^(?:DLY\s+)?(\d{4})-(\d{4})$/);
-  if (daily) {
-    const st = daily[1], et = daily[2];
-    return [{ startDateTime: bDt, endDateTime: cDt,
-      schedule: [{ day: ['MON','TUE','WED','THU','FRI','SAT','SUN'],
-        startTime: `${st.slice(0,2)}:${st.slice(2)}`, endTime: `${et.slice(0,2)}:${et.slice(2)}` }] }];
-  }
-  return [{ startDateTime: bDt, endDateTime: cDt, rawSchedule: dField }];
-}
-
-// ── Core conversion ────────────────────────────────────────────────────────
-
-function notamToED318Feature(row) {
-  const full = String(row.full_text || '');
-  const num  = String(row.notam_num || '').trim();
-  const loc  = String(row.location  || '').trim();
-
-  const qLine  = getQLine(full);
-  const eField = getField(full, 'E');
-  const fText  = getField(full, 'F') || 'SFC';
-  const gRaw   = getField(full, 'G');
-  const gText  = gRaw.replace(/\s*F\).*$/s, '').trim();
-  const dField = getField(full, 'D') || null;
-
-  const bm = full.match(/B\)\s*(\d{10})/);
-  const cm = full.match(/C\)\s*(\d{10})/);
-  const bDt = bm ? parseNotamDatetime(bm[1]) : parseExcelDate(row.effective_date);
-  const cDt = cm ? parseNotamDatetime(cm[1]) : parseExcelDate(row.expiration_date);
-
-  const [zoneType, restriction] = qcodeInfo(qLine);
-  const nameM = eField.match(/\(([^)]+)\)/);
-  const name  = nameM ? nameM[1].trim() : num;
-
-  const lower  = parseAltitude(fText);
-  const upper  = parseAltitude(gText);
-  const coords = extractCoordinates(eField);
-  const geom   = buildGeometry(coords, qLine);
-  const applicability = buildSchedule(dField, bDt, cDt);
-  const country = getCountry(loc);
-
-  return {
-    type: 'Feature',
-    geometry: geom,
-    properties: {
-      identifier: num,
-      country,
-      name,
-      type: zoneType,
-      restriction,
-      restrictionConditions: '',
-      reason: ['AIR_TRAFFIC'],
-      otherReasonInfo: '',
-      regulationExemption: (eField.includes('SUBJ ATC') || eField.includes('SUBJ TO ATC')) ? 'YES' : '',
-      uSpaceClass: '',
-      message: eField,
-      applicability,
-      zoneAuthority: [{ name: loc, service: 'INFORMATION', email: '', contactName: '', siteURL: '', phone: '', purpose: 'INFORMATION', intervalBefore: 'PT24H' }],
-      geometry: geom ? [{ uomDimensions: 'M', lowerLimit: lower.val, lowerVerticalReference: lower.ref, upperLimit: upper.val, upperVerticalReference: upper.ref, horizontalProjection: geom }] : [],
-      _source: { notamNumber: num, fir: loc, issueDate: parseExcelDate(row.issue_date), effectiveDate: bDt, expirationDate: cDt, classification: row.classification, rawQLine: qLine }
-    }
-  };
-}
-
-function buildGeoJSON(row) {
-  return {
-    type: 'FeatureCollection',
-    features: [notamToED318Feature(row)],
-    _metadata: { standard: 'ED-318', generatedAt: new Date().toISOString(), notamNumber: row.notam_num }
-  };
-}
-
-// ── Excel parsing ──────────────────────────────────────────────────────────
-
-function parseExcel(arrayBuffer, filename) {
-  const wb   = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
-  const ws   = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-
-  // Find header row — look for 'location' in first column
-  let headerIdx = -1;
-  for (let i = 0; i < rows.length; i++) {
-    if (String(rows[i][0]).trim().toLowerCase() === 'location') { headerIdx = i; break; }
-  }
-  if (headerIdx < 0) throw new Error("Could not find header row. Make sure this is a valid FNS NOTAM export.");
-
-  const data = rows.slice(headerIdx + 1).filter(r => r[1] && String(r[1]).trim());
-  return data.map(r => ({
-    location:        String(r[0] || '').trim(),
-    notam_num:       String(r[1] || '').trim(),
-    classification:  String(r[2] || '').trim(),
-    issue_date:      String(r[3] || '').trim(),
-    effective_date:  String(r[4] || '').trim(),
-    expiration_date: String(r[5] || '').trim(),
-    full_text:       String(r[6] || '').trim(),
+function wrapGJ(feats,num=''){return{type:'FeatureCollection',features:Array.isArray(feats)?feats:[feats],_metadata:{standard:'ED-318',generatedAt:new Date().toISOString(),notamNumber:num}};}
+function parseXL(ab){
+  const wb=XLSX.read(new Uint8Array(ab),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  let hi=-1;for(let i=0;i<rows.length;i++){if(String(rows[i][0]).trim().toLowerCase()==='location'){hi=i;break;}}
+  if(hi<0)throw new Error('Cannot find header row. Use a valid FNS NOTAM export.');
+  return rows.slice(hi+1).filter(r=>r[1]&&String(r[1]).trim()).map(r=>({
+    location:String(r[0]||'').trim(),notam_num:String(r[1]||'').trim(),classification:String(r[2]||'').trim(),
+    issue_date:String(r[3]||'').trim(),effective_date:String(r[4]||'').trim(),expiration_date:String(r[5]||'').trim(),
+    full_text:String(r[6]||'').trim()
   }));
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// APP STATE & UI
-// ═══════════════════════════════════════════════════════════════════════════
+/* ── STATE ───────────────────────────────────────────────────── */
+const S={notams:[],filtered:[],selected:null,geojson:null,filter:'all',map:null,layer:null,selIds:new Set(),mode:'combined'};
 
-const state = { notams: [], filtered: [], selected: null, geojson: null, filter: 'all', map: null, mapLayer: null };
-
-// ── Map ────────────────────────────────────────────────────────────────────
-function initMap() {
-  state.map = L.map('map', { center: [4.5, 109], zoom: 5 });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  }).addTo(state.map);
+/* ── THEME ───────────────────────────────────────────────────── */
+const SUN='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+const MOON='<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+function toggleTheme(){
+  const h=document.documentElement,dark=h.dataset.theme==='dark';
+  h.dataset.theme=dark?'light':'dark';
+  document.getElementById('th-icon').innerHTML=dark?SUN:MOON;
+  localStorage.setItem('th',h.dataset.theme);
+  if(S.map)setTimeout(()=>S.map.invalidateSize(),300);
 }
+(()=>{const t=localStorage.getItem('th');if(t){document.documentElement.dataset.theme=t;if(t==='light')document.getElementById('th-icon').innerHTML=SUN;}})();
 
-function clearMap() {
-  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
-  document.getElementById('map-empty').style.display   = 'flex';
-  document.getElementById('map-overlay').style.display = 'none';
+/* ── MAP ─────────────────────────────────────────────────────── */
+function initMap(){
+  S.map=L.map('map',{center:[4.5,109],zoom:5});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:19
+  }).addTo(S.map);
 }
-
-function renderMap(gj) {
-  if (state.mapLayer) { state.map.removeLayer(state.mapLayer); state.mapLayer = null; }
-  const feat = gj.features[0];
-  if (!feat || !feat.geometry) { clearMap(); return; }
-
-  document.getElementById('map-empty').style.display = 'none';
-
-  state.mapLayer = L.geoJSON(feat, {
-    style: { color: '#388bfd', weight: 2.5, opacity: 1, fillColor: '#388bfd', fillOpacity: 0.18 },
-    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 8, color: '#388bfd', weight: 2, fillColor: '#388bfd', fillOpacity: 0.5 }),
-  }).addTo(state.map);
-
-  const bounds = state.mapLayer.getBounds();
-  if (bounds.isValid()) state.map.fitBounds(bounds, { padding: [40, 40] });
-
-  const geomType = feat.geometry.type;
-  const pts = geomType === 'Polygon' ? feat.geometry.coordinates[0].length : 1;
-  const ov  = document.getElementById('map-overlay');
-  ov.style.display = 'block';
-  ov.textContent   = `${state.selected.notam_num}  ·  ${geomType}  ·  ${pts} pts`;
+function clearMap(){
+  if(S.layer){S.map.removeLayer(S.layer);S.layer=null;}
+  document.getElementById('map-empty').style.display='flex';
+  document.getElementById('map-badge').style.display='none';
 }
+function renderMap(gj){
+  if(S.layer){S.map.removeLayer(S.layer);S.layer=null;}
+  const feat=gj.features[0];
+  if(!feat||!feat.geometry){clearMap();return;}
+  document.getElementById('map-empty').style.display='none';
 
-// ── Upload ─────────────────────────────────────────────────────────────────
-const fileInput  = document.getElementById('file-input');
-const uploadZone = document.getElementById('upload-zone');
+  S.layer=L.geoJSON(feat,{
+    style:{color:'#e63946',weight:3,opacity:1,fillOpacity:0},
+    pointToLayer:(_,ll)=>L.circleMarker(ll,{radius:8,color:'#e63946',weight:2.5,fillColor:'#e63946',fillOpacity:.4}),
+  }).addTo(S.map);
 
-uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault(); uploadZone.classList.remove('drag');
-  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
-
-function handleFile(file) {
-  const fname = document.getElementById('upload-filename');
-  fname.textContent = '⏳ Parsing…';
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const notams = parseExcel(ev.target.result, file.name);
-      state.notams   = notams;
-      state.selected = null;
-      state.geojson  = null;
-      fname.textContent = file.name;
-      document.getElementById('hdr-meta').textContent = `${notams.length} NOTAM${notams.length !== 1 ? 's' : ''} · ${file.name}`;
-      applyFilter();
-      clearRight();
-      clearMap();
-      toast(`Loaded ${notams.length} NOTAMs`, 'ok');
-    } catch(err) {
-      fname.textContent = '';
-      toast(err.message, 'err');
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ── Filter ─────────────────────────────────────────────────────────────────
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.filter = btn.dataset.f;
-    applyFilter();
+  // Apply zigzag fill via SVG pattern after Leaflet renders paths
+  requestAnimationFrame(()=>{
+    S.map.getPanes().overlayPane.querySelectorAll('path').forEach(p=>{
+      p.setAttribute('fill','url(#zzpat)');
+      p.setAttribute('fill-opacity','1');
+      p.setAttribute('stroke','#e63946');
+      p.setAttribute('stroke-width','2.5');
+    });
   });
-});
 
-function applyFilter() {
-  const f = state.filter;
-  state.filtered = f === 'all' ? state.notams : state.notams.filter(n => n.notam_num.startsWith(f));
-  document.getElementById('count-pill').textContent = state.filtered.length;
-  renderList();
+  const b=S.layer.getBounds();
+  if(b.isValid())S.map.fitBounds(b,{padding:[40,40]});
+  const gt=feat.geometry.type,pts=gt==='Polygon'?feat.geometry.coordinates[0].length:1;
+  const mb=document.getElementById('map-badge');
+  mb.style.display='block';
+  mb.textContent=`${S.selected.notam_num}  ·  ${gt}  ·  ${pts} pts`;
 }
 
-// ── List ───────────────────────────────────────────────────────────────────
-function renderList() {
-  const el = document.getElementById('notam-list');
-  if (!state.filtered.length) {
-    el.innerHTML = `<div class="empty">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-      ${state.notams.length === 0 ? 'Upload a file to load NOTAMs' : 'No NOTAMs match this filter'}
-    </div>`;
+/* ── UPLOAD ──────────────────────────────────────────────────── */
+const fi=document.getElementById('file-input'),uz=document.getElementById('upload-zone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
+uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');if(e.dataTransfer.files[0])hFile(e.dataTransfer.files[0]);});
+fi.addEventListener('change',()=>{if(fi.files[0])hFile(fi.files[0]);});
+function hFile(f){
+  const fn=document.getElementById('upload-filename');fn.textContent='⏳ Parsing…';
+  const r=new FileReader();
+  r.onload=ev=>{try{
+    const n=parseXL(ev.target.result);S.notams=n;S.selected=null;S.geojson=null;S.selIds=new Set();
+    fn.textContent=f.name;
+    document.getElementById('hdr-meta').textContent=`${n.length} NOTAM${n.length!==1?'s':''} · ${f.name}`;
+    applyFilter();clearRight();clearMap();toast(`Loaded ${n.length} NOTAMs`,'ok');
+  }catch(err){fn.textContent='';toast(err.message,'err');}};
+  r.readAsArrayBuffer(f);
+}
+
+/* ── FILTER ──────────────────────────────────────────────────── */
+document.querySelectorAll('.fb').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.fb').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');S.filter=b.dataset.f;S.selIds=new Set();applyFilter();
+}));
+function applyFilter(){
+  const f=S.filter;S.filtered=f==='all'?S.notams:S.notams.filter(n=>n.notam_num.startsWith(f));
+  document.getElementById('count-pill').textContent=S.filtered.length;
+  document.getElementById('sel-all').checked=false;updSel();renderList();
+}
+
+/* ── SELECTION ───────────────────────────────────────────────── */
+function toggleSelAll(c){c?S.filtered.forEach(n=>S.selIds.add(n.notam_num)):S.selIds.clear();updSel();renderList();}
+function toggleSel(id,c){c?S.selIds.add(id):S.selIds.delete(id);updSel();document.getElementById('sel-all').checked=S.filtered.every(n=>S.selIds.has(n.notam_num));}
+function updSel(){const n=S.selIds.size;document.getElementById('sel-count').textContent=n>0?`${n} selected`:'';}
+
+/* ── LIST ────────────────────────────────────────────────────── */
+const CTAG={A:'tag-A',B:'tag-B',C:'tag-C',D:'tag-D',E:'tag-E',F:'tag-F'};
+function cTag(id){const c=id[0].toUpperCase();return`<span class="tag ${CTAG[c]||'tag-A'}">${c}</span>`;}
+function renderList(){
+  const el=document.getElementById('notam-list');
+  if(!S.filtered.length){
+    el.innerHTML=`<div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>${S.notams.length===0?'Upload a file to load NOTAMs':'No NOTAMs match this filter'}</div>`;
     return;
   }
-  el.innerHTML = state.filtered.map(n => {
-    const active = state.selected && state.selected.notam_num === n.notam_num ? 'active' : '';
-    const isC    = n.notam_num.startsWith('C');
-    const nameM  = n.full_text.match(/\(([^)]+)\)/);
-    const name   = nameM ? nameM[1] : '—';
-    const expM   = n.expiration_date.match(/\d{2}\/\d{2}\/\d{4}/);
-    const exp    = expM ? expM[0] : n.expiration_date.slice(0, 10);
-    return `<div class="notam-item ${active}" data-id="${n.notam_num}">
-      <div class="notam-row1">
-        <span class="notam-id">${n.notam_num}</span>
-        <span class="tag ${isC ? 'tag-c' : 'tag-a'}">${isC ? 'C' : 'A'}</span>
+  el.innerHTML=S.filtered.map(n=>{
+    const act=S.selected&&S.selected.notam_num===n.notam_num?'active':'';
+    const nm=n.full_text.match(/\(([^)]+)\)/);
+    const exp=(n.expiration_date.match(/\d{2}\/\d{2}\/\d{4}/)||[''])[0]||n.expiration_date.slice(0,10);
+    const chk=S.selIds.has(n.notam_num)?'checked':'';
+    return`<div class="ni ${act}" data-id="${n.notam_num}">
+      <input type="checkbox" class="ni-cb" ${chk} onclick="event.stopPropagation();toggleSel('${n.notam_num}',this.checked)">
+      <div class="ni-body">
+        <div class="ni-row1"><span class="ni-id">${n.notam_num}</span>${cTag(n.notam_num)}</div>
+        <div class="ni-name">${nm?nm[1]:'—'}</div>
+        <div class="ni-date">Exp: ${exp}</div>
       </div>
-      <div class="notam-name">${name}</div>
-      <div class="notam-dates">Exp: ${exp}</div>
     </div>`;
   }).join('');
-  el.querySelectorAll('.notam-item').forEach(item => item.addEventListener('click', () => selectNotam(item.dataset.id)));
+  el.querySelectorAll('.ni').forEach(x=>x.addEventListener('click',()=>selNotam(x.dataset.id)));
 }
 
-// ── Select ─────────────────────────────────────────────────────────────────
-function selectNotam(id) {
-  state.selected = state.notams.find(n => n.notam_num === id);
-  if (!state.selected) return;
-  try {
-    state.geojson = buildGeoJSON(state.selected);
-    renderList();
-    renderMap(state.geojson);
-    renderRight(state.geojson);
-  } catch(err) {
-    toast('Conversion error: ' + err.message, 'err');
-  }
+/* ── SELECT ──────────────────────────────────────────────────── */
+function selNotam(id){
+  S.selected=S.notams.find(n=>n.notam_num===id);if(!S.selected)return;
+  try{S.geojson=wrapGJ([toFeat(S.selected)],S.selected.notam_num);renderList();renderMap(S.geojson);renderRight(S.geojson);}
+  catch(err){toast('Conversion error: '+err.message,'err');}
 }
 
-// ── Right panel ────────────────────────────────────────────────────────────
-function clearRight() {
-  document.getElementById('right-panel').innerHTML = `<div class="empty">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
-    Select a NOTAM to preview<br>its ED-318 GeoJSON
-  </div>`;
-  document.getElementById('dl-btn').disabled = true;
+/* ── RIGHT PANEL ─────────────────────────────────────────────── */
+function clearRight(){
+  document.getElementById('right-panel').innerHTML=`<div class="empty"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>Select a NOTAM to preview<br>its ED-318 GeoJSON</div>`;
+  document.getElementById('dl-btn').disabled=true;
 }
-
-function renderRight(gj) {
-  const p    = gj.features[0].properties;
-  const g    = p.geometry[0] || {};
-  const geom = gj.features[0].geometry;
-  const app  = p.applicability[0] || {};
-  const safe = state.selected.notam_num.replace('/', '_');
-  const isC  = state.selected.notam_num.startsWith('C');
-
-  const slim = { type:'FeatureCollection', features:[{ type:'Feature', geometry: geom,
-    properties:{ identifier:p.identifier, name:p.name, type:p.type, restriction:p.restriction, country:p.country }}]};
-  const snippet = syntaxHL(JSON.stringify(slim, null, 2).slice(0, 900) + '\n…');
-
-  document.getElementById('right-panel').innerHTML = `
+function renderRight(gj){
+  const p=gj.features[0].properties,g=p.geometry[0]||{},geom=gj.features[0].geometry,app=p.applicability[0]||{};
+  const safe=S.selected.notam_num.replace('/','_');
+  document.getElementById('right-panel').innerHTML=`
     <div class="field-block"><div class="field-lbl">File name</div><div class="field-val mono">${safe}.geojson</div></div>
-    <div class="field-block"><div class="field-lbl">Format</div><div class="field-val success">ED-318 GeoJSON ✓</div></div>
+    <div class="field-block"><div class="field-lbl">Format</div><div class="field-val ok">ED-318 GeoJSON ✓</div></div>
     <div class="divider"></div>
-    <div class="field-block"><div class="field-lbl">Identifier</div>
-      <div class="field-val" style="display:flex;align-items:center;gap:6px">${p.identifier}<span class="tag ${isC?'tag-c':'tag-a'}">${isC?'C-class':'A-class'}</span></div></div>
+    <div class="field-block"><div class="field-lbl">Identifier</div><div class="field-val" style="display:flex;align-items:center;gap:6px">${p.identifier} ${cTag(S.selected.notam_num)}</div></div>
     <div class="field-block"><div class="field-lbl">Name</div><div class="field-val">${p.name}</div></div>
-    <div class="field-block"><div class="field-lbl">Zone type</div><div class="field-val">${p.type} <span style="color:var(--muted)">·</span> ${p.restriction}</div></div>
+    <div class="field-block"><div class="field-lbl">Zone type</div><div class="field-val">${p.type} · ${p.restriction}</div></div>
     <div class="field-block"><div class="field-lbl">Country</div><div class="field-val mono">${p.country}</div></div>
-    <div class="field-block"><div class="field-lbl">Geometry</div>
-      <div class="field-val">${geom ? geom.type : 'None'} <span style="color:var(--muted)">·</span> <span class="mono">${geom && geom.type==='Polygon' ? geom.coordinates[0].length+' pts' : '—'}</span></div></div>
+    <div class="field-block"><div class="field-lbl">Geometry</div><div class="field-val">${geom?geom.type:'None'} · <span class="mono">${geom&&geom.type==='Polygon'?geom.coordinates[0].length+' pts':'—'}</span></div></div>
     <div class="field-block"><div class="field-lbl">Altitude</div><div class="field-val mono">${g.lowerLimit??0}m ${g.lowerVerticalReference??'AGL'} → ${g.upperLimit??0}m ${g.upperVerticalReference??'AGL'}</div></div>
     <div class="field-block"><div class="field-lbl">Valid from</div><div class="field-val mono" style="font-size:10px">${app.startDateTime||'—'}</div></div>
     <div class="field-block"><div class="field-lbl">Valid to</div><div class="field-val mono" style="font-size:10px">${app.endDateTime||'—'}</div></div>
     <div class="divider"></div>
-    <div class="field-block"><div class="field-lbl">Preview</div><div class="json-box">${snippet}</div></div>`;
-
-  const btn = document.getElementById('dl-btn');
-  btn.disabled = false;
-  btn.onclick  = downloadNotam;
+    <div class="field-block">
+      <div class="editor-hd"><div class="field-lbl">Edit GeoJSON before export</div><span class="editor-chip">✏ editable</span></div>
+      <textarea class="json-editor" id="json-ed" spellcheck="false">${JSON.stringify(gj,null,2)}</textarea>
+      <div class="json-badge ok" id="jbadge">✓ Valid JSON</div>
+    </div>`;
+  document.getElementById('json-ed').addEventListener('input',()=>{
+    const b=document.getElementById('jbadge');if(!b)return;
+    try{JSON.parse(document.getElementById('json-ed').value);b.textContent='✓ Valid JSON';b.className='json-badge ok';}
+    catch(e){b.textContent='✗ Invalid JSON — fix before downloading';b.className='json-badge err';}
+  });
+  document.getElementById('dl-btn').disabled=false;
 }
 
-function syntaxHL(json) {
-  return json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
-      if (/^"/.test(m)) return /:$/.test(m) ? `<span class="jk">${m}</span>` : `<span class="js">${m}</span>`;
-      if (/true|false|null/.test(m)) return `<span class="jb">${m}</span>`;
-      return `<span class="jn">${m}</span>`;
-    });
+/* ── DOWNLOAD ────────────────────────────────────────────────── */
+function dlSingle(){
+  if(!S.selected)return;
+  const ed=document.getElementById('json-ed');let data;
+  try{data=JSON.parse(ed.value);}catch(e){toast('Fix JSON errors first','err');return;}
+  const safe=S.selected.notam_num.replace('/','_');
+  dl(new Blob([JSON.stringify(data,null,2)],{type:'application/geo+json'}),`${safe}.geojson`);
+  toast(`Downloaded ${safe}.geojson`,'ok');
+}
+function dl(blob,name){const u=URL.createObjectURL(blob),a=Object.assign(document.createElement('a'),{href:u,download:name});a.click();URL.revokeObjectURL(u);}
+
+/* ── BULK MODAL ──────────────────────────────────────────────── */
+function openBulk(){
+  const n=S.selIds.size;
+  document.getElementById('modal-info').textContent=n>0?`${n} NOTAMs specifically selected`:`${S.filtered.length} visible NOTAMs (no specific selection — exports all visible)`;
+  document.getElementById('bulk-overlay').classList.add('open');
+}
+function closeBulk(){document.getElementById('bulk-overlay').classList.remove('open');}
+function setMode(m){
+  S.mode=m;
+  document.getElementById('opt-combined').classList.toggle('sel',m==='combined');
+  document.getElementById('opt-individual').classList.toggle('sel',m==='individual');
+  document.querySelector(`input[value="${m}"]`).checked=true;
+}
+async function runBulk(){
+  const btn=document.getElementById('btn-export');btn.disabled=true;btn.textContent='Exporting…';
+  const rows=S.selIds.size>0?S.notams.filter(n=>S.selIds.has(n.notam_num)):S.filtered;
+  if(!rows.length){toast('No NOTAMs to export','err');btn.disabled=false;btn.textContent='Export';return;}
+  try{
+    if(S.mode==='combined'){
+      const gj=wrapGJ(rows.map(r=>toFeat(r)),'bulk-export');
+      dl(new Blob([JSON.stringify(gj,null,2)],{type:'application/geo+json'}),`notams_ed318_${rows.length}.geojson`);
+      toast(`Exported ${rows.length} NOTAMs as one file`,'ok');
+    }else{
+      const zip=new JSZip();
+      for(const r of rows){const gj=wrapGJ([toFeat(r)],r.notam_num);zip.file(`${r.notam_num.replace('/','_')}.geojson`,JSON.stringify(gj,null,2));}
+      dl(await zip.generateAsync({type:'blob',compression:'DEFLATE'}),`notams_ed318_${rows.length}files.zip`);
+      toast(`Exported ${rows.length} files as ZIP`,'ok');
+    }
+  }catch(err){toast('Export failed: '+err.message,'err');}
+  btn.disabled=false;btn.textContent='Export';closeBulk();
 }
 
-// ── Download ───────────────────────────────────────────────────────────────
-function downloadNotam() {
-  if (!state.selected || !state.geojson) return;
-  const safe = state.selected.notam_num.replace('/', '_');
-  const blob = new Blob([JSON.stringify(state.geojson, null, 2)], { type: 'application/geo+json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), { href: url, download: `${safe}.geojson` });
-  a.click();
-  URL.revokeObjectURL(url);
-  toast(`Downloaded ${safe}.geojson`, 'ok');
-}
+/* ── TOAST ───────────────────────────────────────────────────── */
+let _t;function toast(msg,type='ok'){const e=document.getElementById('toast');e.textContent=msg;e.className=`toast ${type} show`;clearTimeout(_t);_t=setTimeout(()=>e.classList.remove('show'),3200);}
 
-// ── Toast ──────────────────────────────────────────────────────────────────
-let toastTimer;
-function toast(msg, type = 'ok') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className   = `toast ${type} show`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
-}
-
-// ── Boot ───────────────────────────────────────────────────────────────────
+/* ── BOOT ────────────────────────────────────────────────────── */
 initMap();
 </script>
 </body>
